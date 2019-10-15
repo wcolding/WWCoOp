@@ -1,0 +1,3 @@
+﻿  DolphinHook.cpp
+C:\Users\Will\source\repos\WW-Co-Op\DolphinHook.cpp(16): warning C4307: '+': integral constant overflow
+  WW-Co-Op.vcxproj -> C:\Users\Will\source\repos\WW-Co-Op\Debug\WW-Co-Op.exe
