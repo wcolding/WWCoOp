@@ -1,63 +1,7 @@
 #pragma once
 #include "Items.h"
 
-struct WWInventory
-{
-	__int8 itemStates[21];
-	__int8 Songs;
-	__int8 Triforce;
-	__int8 BowMaxAmmo; // may be obsolete with state
-	__int8 BombsMaxAmmo;
-	__int8 Hearts; // still have to find this
-	__int8 PiecesofHeart; // still have to find this
-	__int8 XButtonEquip;
-	__int8 YButtonEquip;
-	__int8 ZButtonEquip;
-	
-	WWInventory()
-	{
-		memset(&itemStates, 0, sizeof(itemStates));
-		Songs = 0;
-		Triforce = 0;
-		Hearts = 0;
-		PiecesofHeart = 0;
-		BowMaxAmmo = 30;
-		BombsMaxAmmo = 30;
-		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
-	}	
-};
-
-WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
-{
-	WWInventory patch;
-	int i;
-	for (i = 0; i < sizeof(patch.itemStates); i++)
-	{
-		if (newInv.itemStates[i] > oldInv.itemStates[i])
-		{
-			patch.itemStates[i] = newInv.itemStates[i];
-
-			// If the item being upgraded is on a button, update the equipped item too
-			if (oldInv.XButtonEquip == oldInv.itemStates[i])
-				patch.XButtonEquip = patch.itemStates[i];
-			if (oldInv.YButtonEquip == oldInv.itemStates[i])
-				patch.YButtonEquip = patch.itemStates[i];
-			if (oldInv.ZButtonEquip == oldInv.itemStates[i])
-				patch.ZButtonEquip = patch.itemStates[i];
-		}
-		else 
-		{
-			patch.itemStates[i] = 0;
-		}
-	}
-
-	patch.Songs = oldInv.Songs ^ newInv.Songs;
-	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
-
-	return patch;
-}
-
-vector<WWItemInfo> InventoryMap = 
+vector<WWItemInfo> InventoryMap =
 {
 	{INV_OFFSET, {{WWItem::NoItem, ""}, {WWItem::Telecope, "Telescope"}}},
 	{INV_OFFSET + 1, {{WWItem::NoItem, ""}, {WWItem::Sail, "Sail"}}},
@@ -101,6 +45,106 @@ vector<WWItemInfo> InventoryMap =
 	{WWItemSlot::BowMaxAmmo, {{0x1E, "Quiver (30)"}, {0x3C, "Quiver (60)"}, {0x63, "Quiver (99)"}}},
 	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"} }}
 
-
-
 };
+
+struct WWInventory
+{
+	__int8 itemStates[21];
+	__int8 Songs;
+	__int8 Triforce;
+	__int8 BowMaxAmmo; // may be obsolete with state
+	__int8 BombsMaxAmmo;
+	__int8 Hearts; // still have to find this
+	__int8 PiecesofHeart; // still have to find this
+	__int8 XButtonEquip;
+	__int8 YButtonEquip;
+	__int8 ZButtonEquip;
+	
+	WWInventory()
+	{
+		memset(&itemStates, 0, sizeof(itemStates));
+		Songs = 0;
+		Triforce = 0;
+		Hearts = 0;
+		PiecesofHeart = 0;
+		BowMaxAmmo = 30;
+		BombsMaxAmmo = 30;
+		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
+	}	
+};
+
+// We will use a "patch" system to only write changes and not write the entire inventory all the time
+WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
+{
+	WWInventory patch;
+	int i;
+	for (i = 0; i < sizeof(patch.itemStates); i++)
+	{
+		if (newInv.itemStates[i] > oldInv.itemStates[i])
+		{
+			patch.itemStates[i] = newInv.itemStates[i];
+
+			// If the item being upgraded is on a button, update the equipped item too
+			if (oldInv.XButtonEquip == oldInv.itemStates[i])
+				patch.XButtonEquip = patch.itemStates[i];
+			if (oldInv.YButtonEquip == oldInv.itemStates[i])
+				patch.YButtonEquip = patch.itemStates[i];
+			if (oldInv.ZButtonEquip == oldInv.itemStates[i])
+				patch.ZButtonEquip = patch.itemStates[i];
+		}
+		else 
+		{
+			patch.itemStates[i] = 0;
+		}
+	}
+
+	patch.Songs = oldInv.Songs ^ newInv.Songs;
+	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
+
+	return patch;
+}
+
+// This will be used to print synched items to the console
+vector<string> GetInventoryStrings(WWInventory inv)
+{
+	vector<string> builder;
+	int i;
+	for (i = 0; i < sizeof(inv.itemStates); i++)
+	{
+		if (inv.itemStates[i] > 0)
+			builder.push_back(InventoryMap[i].states[inv.itemStates[i]].name);
+	}
+
+	if (inv.Songs & WWSongMask::WindsRequiem != 0)
+		builder.push_back("Wind's Requiem");
+	if (inv.Songs & WWSongMask::BalladofGales != 0)
+		builder.push_back("Ballad of Gales");
+	if (inv.Songs & WWSongMask::CommandMelody != 0)
+		builder.push_back("Command Melody");
+	if (inv.Songs & WWSongMask::EarthGodsLyric != 0)
+		builder.push_back("Earth God's Lyric");
+	if (inv.Songs & WWSongMask::WindGodsAria != 0)
+		builder.push_back("Wind God's Aria");
+	if (inv.Songs & WWSongMask::SongofPassing != 0)
+		builder.push_back("Song of Passing");
+
+	if (inv.Triforce & 0x01 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x02 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x04 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x08 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x10 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x20 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x40 != 0)
+		builder.push_back("Triforce Shard");
+	if (inv.Triforce & 0x80 != 0)
+		builder.push_back("Triforce Shard");
+
+	return builder;
+}
+
