@@ -1,17 +1,4 @@
 ﻿  DolphinHook.cpp
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(118,47): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(120,48): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(122,48): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(124,49): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(126,47): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(128,48): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(131,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(133,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(135,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(137,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(139,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(141,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(143,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\Inventory.h(145,30): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
-C:\Users\Will\source\repos\WWCoOp\DolphinHook.cpp(16,67): warning C4307:  '+': integral constant overflow
+C:\Users\Will\source\repos\WWCoOp\DolphinHook.cpp(12,67): warning C4307:  '+': integral constant overflow
+C:\Users\Will\source\repos\WWCoOp\DolphinHook.cpp(57,16): warning C4018:  '<': signed/unsigned mismatch
   WW-Co-Op.vcxproj -> C:\Users\Will\source\repos\WWCoOp\Debug\WW-Co-Op.exe

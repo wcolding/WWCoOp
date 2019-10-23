@@ -18,12 +18,21 @@
     <ClCompile Include="DolphinHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WWServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Items.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Inventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WWCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WWServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

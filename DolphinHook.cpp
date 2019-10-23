@@ -1,7 +1,3 @@
-#include <iostream>
-#include <Windows.h>
-#include <string>
-
 #include "Inventory.h"
 
 #define BASE_OFFSET 0x7FFF0000
@@ -48,7 +44,22 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 
 int main()
 {
-	HWND window = FindWindowA(NULL, "Dolphin 5.0");
+
+	WWInventory a, b, patch;
+	
+	a.itemStates[12] = 0;
+	b.itemStates[12] = 1;
+
+	patch = MakePatch(a, b);
+	vector<string> log = GetInventoryStrings(patch);
+
+	int i;
+	for (i = 0; i < log.size(); i++)
+	{
+		cout << log[i] << endl;
+	}
+
+	/*HWND window = FindWindowA(NULL, "Dolphin 5.0");
 	if (window == NULL)
 	{
 		cout << "Unable to get Dolphin window." << endl;
@@ -91,6 +102,6 @@ int main()
 		Sleep(1000);
 	};
 	
-	//handle
+	*/
 
 }

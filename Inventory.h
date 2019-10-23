@@ -115,34 +115,34 @@ vector<string> GetInventoryStrings(WWInventory inv)
 			builder.push_back(InventoryMap[i].states[inv.itemStates[i]].name);
 	}
 
-	if (inv.Songs & WWSongMask::WindsRequiem != 0)
+	if ((inv.Songs & WWSongMask::WindsRequiem) != 0)
 		builder.push_back("Wind's Requiem");
-	if (inv.Songs & WWSongMask::BalladofGales != 0)
+	if ((inv.Songs & WWSongMask::BalladofGales) != 0)
 		builder.push_back("Ballad of Gales");
-	if (inv.Songs & WWSongMask::CommandMelody != 0)
+	if ((inv.Songs & WWSongMask::CommandMelody) != 0)
 		builder.push_back("Command Melody");
-	if (inv.Songs & WWSongMask::EarthGodsLyric != 0)
+	if ((inv.Songs & WWSongMask::EarthGodsLyric) != 0)
 		builder.push_back("Earth God's Lyric");
-	if (inv.Songs & WWSongMask::WindGodsAria != 0)
+	if ((inv.Songs & WWSongMask::WindGodsAria) != 0)
 		builder.push_back("Wind God's Aria");
-	if (inv.Songs & WWSongMask::SongofPassing != 0)
+	if ((inv.Songs & WWSongMask::SongofPassing) != 0)
 		builder.push_back("Song of Passing");
 
-	if (inv.Triforce & 0x01 != 0)
+	if ((inv.Triforce & 0x01) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x02 != 0)
+	if ((inv.Triforce & 0x02) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x04 != 0)
+	if ((inv.Triforce & 0x04) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x08 != 0)
+	if ((inv.Triforce & 0x08) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x10 != 0)
+	if ((inv.Triforce & 0x10) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x20 != 0)
+	if ((inv.Triforce & 0x20) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x40 != 0)
+	if ((inv.Triforce & 0x40) != 0)
 		builder.push_back("Triforce Shard");
-	if (inv.Triforce & 0x80 != 0)
+	if ((inv.Triforce & 0x80) != 0)
 		builder.push_back("Triforce Shard");
 
 	return builder;
