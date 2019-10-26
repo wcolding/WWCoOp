@@ -1,4 +1,1 @@
-﻿  DolphinHook.cpp
-C:\Users\Will\source\repos\WWCoOp\DolphinHook.cpp(12,67): warning C4307:  '+': integral constant overflow
-C:\Users\Will\source\repos\WWCoOp\DolphinHook.cpp(57,16): warning C4018:  '<': signed/unsigned mismatch
-  WW-Co-Op.vcxproj -> C:\Users\Will\source\repos\WWCoOp\Debug\WW-Co-Op.exe
+﻿  WW-Co-Op.vcxproj -> C:\Users\Will\source\repos\WW-Co-Op\Debug\WW-Co-Op.exe

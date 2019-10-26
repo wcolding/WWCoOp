@@ -44,22 +44,7 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 
 int main()
 {
-
-	WWInventory a, b, patch;
-	
-	a.itemStates[12] = 0;
-	b.itemStates[12] = 1;
-
-	patch = MakePatch(a, b);
-	vector<string> log = GetInventoryStrings(patch);
-
-	int i;
-	for (i = 0; i < log.size(); i++)
-	{
-		cout << log[i] << endl;
-	}
-
-	/*HWND window = FindWindowA(NULL, "Dolphin 5.0");
+	HWND window = FindWindowA(NULL, "Dolphin 5.0");
 	if (window == NULL)
 	{
 		cout << "Unable to get Dolphin window." << endl;
@@ -81,27 +66,29 @@ int main()
 
 	
 	
-	WWInventory inv_master, inv_swap;
+	WWInventory inv_master, inv_swap, inv_patch;
 
 	inv_swap = GetInventoryFromProcess(handle);
-	
-	
-	int i;
-	for (i = 0; i < sizeof(inv_swap.itemStates); i++)
-	{
-		cout << (int)inv_swap.itemStates[i] << " ";
-	}
-	cout << endl;
-	
+	inv_master = inv_swap;
 
-	while (!running)
+	while (running)
 	{
-		//ReadProcessMemory(handle, (LPVOID)(baseOffset + INV_OFFSET), &inv_swap, 21, 0);
-
+		inv_swap = GetInventoryFromProcess(handle);
+		if (InvChanged(inv_master, inv_swap))
+		{
+			inv_patch = MakePatch(inv_master, inv_swap);
+			inv_master = inv_swap;
+			vector<string> log = GetInventoryStrings(inv_patch);
+			int i;
+			for (i = 0; i < log.size(); i++)
+			{
+				cout << log[i] << endl;
+			}
+		}
 
 		Sleep(1000);
 	};
 	
-	*/
+	
 
 }

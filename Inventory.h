@@ -148,3 +148,28 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	return builder;
 }
 
+bool InvChanged(WWInventory oldInv, WWInventory newInv)
+{
+	int i;
+	for (i = 0; i < sizeof(oldInv.itemStates); i++)
+	{
+		if (oldInv.itemStates[i] != newInv.itemStates[i])
+			return true;
+	}
+
+	if (oldInv.Triforce != newInv.Triforce)
+		return true;
+	if (oldInv.Songs != newInv.Songs)
+		return true;
+	/*
+	if (oldInv.Hearts != newInv.Hearts)
+		return true;
+	if (oldInv.PiecesofHeart != newInv.PiecesofHeart)
+		return true;
+	if (oldInv.BombsMaxAmmo != newInv.BombsMaxAmmo)
+		return true;
+	if (oldInv.BowMaxAmmo != oldInv.BowMaxAmmo)
+		return true; */
+
+	return false;
+}
