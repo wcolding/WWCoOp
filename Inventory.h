@@ -27,6 +27,13 @@ vector<WWItemInfo> InventoryMap =
 	{INV_OFFSET + 18, {{WWItem::NoItem, ""}, {WWItem::MailBag, "Mail Bag"}}},
 	{INV_OFFSET + 19, {{WWItem::NoItem, ""}, {WWItem::Hookshot, "Hookshot"}}},
 	{INV_OFFSET + 20, {{WWItem::NoItem, ""}, {WWItem::Hammer, "Skull Hammer"}}},
+	
+	// Need to figure out mailbag slots still; these are placeholders
+	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::FathersLetter, "Father's Letter"}}},
+	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::NotetoMom, "Note to Mom"}}},
+	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::MaggiesLetter, "Maggie's Letter"}}},
+	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::MoblinsLetter, "Moblin's Letter"}}},
+	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::CabanaDeed, "Cabana Deed"}}},
 
 	// Swords, shields and bracelet must have their icon address written to in addition to the item
 	{WWItemSlot::SwordSlot, {{WWItem::NoItem, ""}, {WWItem::Sword1, "Hero's Sword"}, {WWItem::Sword2, "Master Sword"}, {WWItem::Sword3, "Master Sword (Half-Charged)"}, {WWItem::Sword4, "Master Sword (Fully-Charged)"}}},
@@ -43,17 +50,15 @@ vector<WWItemInfo> InventoryMap =
 	{WWItemSlot::MagicSlot, {{0x00, ""}, {0x10, "Magic"}, {0x20, "Double Magic"}}},
 
 	{WWItemSlot::BowMaxAmmo, {{0x1E, "Quiver (30)"}, {0x3C, "Quiver (60)"}, {0x63, "Quiver (99)"}}},
-	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"} }}
+	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"}}}
 
 };
 
 struct WWInventory
 {
-	__int8 itemStates[21];
+	__int8 itemStates[36];
 	__int8 Songs;
 	__int8 Triforce;
-	__int8 BowMaxAmmo; // may be obsolete with state
-	__int8 BombsMaxAmmo;
 	__int8 Hearts; // still have to find this
 	__int8 PiecesofHeart; // still have to find this
 	__int8 XButtonEquip;
@@ -67,8 +72,6 @@ struct WWInventory
 		Triforce = 0;
 		Hearts = 0;
 		PiecesofHeart = 0;
-		BowMaxAmmo = 30;
-		BombsMaxAmmo = 30;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
 	}	
 };
@@ -111,7 +114,7 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	int i;
 	for (i = 0; i < sizeof(inv.itemStates); i++)
 	{
-		if (inv.itemStates[i] > 0)
+		if ((inv.itemStates[i] > 0) && (InventoryMap[i].states[inv.itemStates[i]].name != ""))
 			builder.push_back(InventoryMap[i].states[inv.itemStates[i]].name);
 	}
 
@@ -172,4 +175,20 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 		return true; */
 
 	return false;
+}
+
+__int8 GetItemState(int mapIndex, __int8 value)
+{
+	int c;
+	__int8 curState;
+	int numStates = InventoryMap[mapIndex].states.size();
+	for (c = 0; c < numStates; c++)
+	{
+		curState = InventoryMap[mapIndex].states[c].item;
+		if (value == curState)
+		{
+			return c;
+		}
+	}
+	return 0;
 }

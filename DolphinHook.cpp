@@ -18,17 +18,11 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 	int numStates;
 	__int8 curState;
 	for (i = 0; i < 21; i++)
-	{
-		numStates = InventoryMap[i].states.size();
-		for (c = 0; c < numStates; c++)
-		{
-			curState = InventoryMap[i].states[c].item;
-			if (p1Buffer[i] == curState)
-			{
-				temp.itemStates[i] = c;
-			}
-		}
-	}
+		temp.itemStates[i] = GetItemState(i, p1Buffer[i]);
+
+	temp.itemStates[26] = GetItemState(26, p2Buffer[0]); // Sword
+	temp.itemStates[27] = GetItemState(27, p2Buffer[WWItemSlot::SwordIconSlot - WWItemSlot::SwordSlot]); // Sword Icon
+
 
 	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::SwordSlot];
 	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::SwordSlot];

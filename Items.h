@@ -1,7 +1,7 @@
 #pragma once
 #include "WWCore.h"
 
-typedef enum
+typedef enum : __int8
 {
 	Sword1	=	0x38, // Hero's Sword
 	Sword2	=	0x39, // Master Sword
