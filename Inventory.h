@@ -129,21 +129,21 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		builder.push_back("Song of Passing");
 
 	if ((inv.Triforce & 0x01) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 1");
 	if ((inv.Triforce & 0x02) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 2");
 	if ((inv.Triforce & 0x04) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 3");
 	if ((inv.Triforce & 0x08) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 4");
 	if ((inv.Triforce & 0x10) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 5");
 	if ((inv.Triforce & 0x20) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 6");
 	if ((inv.Triforce & 0x40) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 7");
 	if ((inv.Triforce & 0x80) != 0)
-		builder.push_back("Triforce Shard");
+		builder.push_back("Triforce Shard 8");
 
 	return builder;
 }

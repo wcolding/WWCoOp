@@ -6,10 +6,12 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 {
 	WWInventory temp;
 	const size_t captureLength = 21;
-	__int8 buffer[captureLength];
+	__int8 p1Buffer[captureLength];
+	__int8 p2Buffer[177];
 	__int8 equipBuffer[3];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + ItemInfoStart), &buffer, captureLength, 0);
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), 0);
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SwordSlot), &p2Buffer, sizeof(p2Buffer), nullptr);
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 
 	int i;
 	int c;
@@ -17,22 +19,20 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 	__int8 curState;
 	for (i = 0; i < 21; i++)
 	{
-		//cout << hex << "0x" << (int)buffer[i] << " ";
-		numStates = InventoryMap[i].states.capacity();
+		numStates = InventoryMap[i].states.size();
 		for (c = 0; c < numStates; c++)
 		{
 			curState = InventoryMap[i].states[c].item;
-			if (buffer[i] == curState)
+			if (p1Buffer[i] == curState)
 			{
 				temp.itemStates[i] = c;
 			}
 		}
 	}
-	//cout << endl;
-	/*
-	temp.Songs = buffer[WWItemSlot::SongsSlot - ItemInfoStart - 1];
-	temp.Triforce = buffer[WWItemSlot::TriforceSlot - ItemInfoStart - 1];
-	temp.BowMaxAmmo = buffer[WWItemSlot::BowMaxAmmo - ItemInfoStart - 1];
+
+	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::SwordSlot];
+	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::SwordSlot];
+	/*temp.BowMaxAmmo = buffer[WWItemSlot::BowMaxAmmo - ItemInfoStart - 1];
 	temp.BombsMaxAmmo = buffer[WWItemSlot::BombsMaxAmmo - ItemInfoStart - 1];
 	*/
 	temp.XButtonEquip = equipBuffer[0];

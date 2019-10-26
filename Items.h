@@ -73,7 +73,7 @@ typedef enum
 	Row 3: Bottles 1-4, Mail Bag, Hookshot, Skull Hammer
 
 	2nd Page
-	Starts at	0x003C4CBC
+	
 	Icons: Sword, Shield, Bracelets, Key Bag, Mask (equip works)
 */
 typedef enum
