@@ -58,6 +58,50 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 	return temp;
 }
 
+void WriteMappedState(HANDLE h, int index, int state)
+{
+	WriteProcessMemory(h, (LPVOID)(InventoryMap[index].address), &InventoryMap[index].states[state].item, 1, nullptr);
+}
+
+void StoreInventoryToProcess(HANDLE h, WWInventory patch)
+{
+	int i, c;
+
+	for (i = 0; i < 21; i++)
+	{
+		// Only write changed values
+		if (patch.itemStates[i] != 0)
+			WriteMappedState(h, i, patch.itemStates[i]);
+	}
+
+	// Only write new mail to empty slots
+	__int8 mailBuffer[8];
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart), &mailBuffer, sizeof(mailBuffer), nullptr);
+	
+	for (i = 21; i < 26; i++)
+	{
+		if (patch.itemStates[i] != 0)
+		{
+			for (c = 0; c < sizeof(mailBuffer); c++)
+			{
+				if (mailBuffer[c] == WWItem::NoItem)
+				{
+					WriteProcessMemory(h, (LPVOID)(WWItemSlot::MailBagStart + c), &InventoryMap[i].states[1].item, 1, nullptr);
+					break;
+				}
+			}
+		}
+	}
+
+	for (i = 26; i < 37; i++)
+	{
+		if (patch.itemStates[i] != 0)
+			WriteMappedState(h, i, patch.itemStates[i]);
+	}
+
+	// reread triforce and songs and OR them with patch value?
+}
+
 int main()
 {
 	HWND window = FindWindowA(NULL, "Dolphin 5.0");
