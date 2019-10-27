@@ -94,6 +94,8 @@ typedef enum
 	
 	WalletSlot		=	0x003C4C1A,
 	MagicSlot		=	0x003C4C1B,
+
+	MailBagStart	=	0x003C4C8E
 } WWItemSlot;
 
 typedef enum

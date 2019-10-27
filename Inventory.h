@@ -29,11 +29,11 @@ vector<WWItemInfo> InventoryMap =
 	{INV_OFFSET + 20, {{WWItem::NoItem, ""}, {WWItem::Hammer, "Skull Hammer"}}},
 	
 	// Need to figure out mailbag slots still; these are placeholders
-	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::FathersLetter, "Father's Letter"}}},
-	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::NotetoMom, "Note to Mom"}}},
-	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::MaggiesLetter, "Maggie's Letter"}}},
-	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::MoblinsLetter, "Moblin's Letter"}}},
-	{INV_OFFSET - 1, {{WWItem::NoItem, ""}, {WWItem::CabanaDeed, "Cabana Deed"}}},
+	{WWItemSlot::MailBagStart, {{WWItem::NoItem, ""}, {WWItem::FathersLetter, "Father's Letter"}}},
+	{WWItemSlot::MailBagStart, {{WWItem::NoItem, ""}, {WWItem::NotetoMom, "Note to Mom"}}},
+	{WWItemSlot::MailBagStart, {{WWItem::NoItem, ""}, {WWItem::MaggiesLetter, "Maggie's Letter"}}},
+	{WWItemSlot::MailBagStart, {{WWItem::NoItem, ""}, {WWItem::MoblinsLetter, "Moblin's Letter"}}},
+	{WWItemSlot::MailBagStart, {{WWItem::NoItem, ""}, {WWItem::CabanaDeed, "Cabana Deed"}}},
 
 	// Swords, shields and bracelet must have their icon address written to in addition to the item
 	{WWItemSlot::SwordSlot, {{WWItem::NoItem, ""}, {WWItem::Sword1, "Hero's Sword"}, {WWItem::Sword2, "Master Sword"}, {WWItem::Sword3, "Master Sword (Half-Charged)"}, {WWItem::Sword4, "Master Sword (Fully-Charged)"}}},
@@ -56,7 +56,7 @@ vector<WWItemInfo> InventoryMap =
 
 struct WWInventory
 {
-	__int8 itemStates[36];
+	__int8 itemStates[37];
 	__int8 Songs;
 	__int8 Triforce;
 	__int8 Hearts; // still have to find this

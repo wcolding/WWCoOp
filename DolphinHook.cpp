@@ -5,24 +5,46 @@
 WWInventory GetInventoryFromProcess(HANDLE h)
 {
 	WWInventory temp;
-	const size_t captureLength = 21;
-	__int8 p1Buffer[captureLength];
+	__int8 p1Buffer[21];
 	__int8 p2Buffer[177];
 	__int8 equipBuffer[3];
+	__int8 mailBuffer[8];
 	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
 	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SwordSlot), &p2Buffer, sizeof(p2Buffer), nullptr);
 	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
+	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::SwordSlot], sizeof(mailBuffer));
 
 	int i;
 	int c;
-	int numStates;
-	__int8 curState;
 	for (i = 0; i < 21; i++)
 		temp.itemStates[i] = GetItemState(i, p1Buffer[i]);
 
+	// Mail bag is arranged in order of collection.
+	// To avoid dealing with this we'll force storage to conform to the InventoryMap order
+	for (i = 0; i < sizeof(mailBuffer); i++)
+	{
+		if (mailBuffer[i] != WWItem::NoItem)
+		{
+			for (c = 21; c < 26; c++)
+			{
+				if (InventoryMap[c].states[1].item == mailBuffer[i])
+					temp.itemStates[c] = 1; // Item state 1 is the piece of mail
+			}
+		}
+	}
+
 	temp.itemStates[26] = GetItemState(26, p2Buffer[0]); // Sword
 	temp.itemStates[27] = GetItemState(27, p2Buffer[WWItemSlot::SwordIconSlot - WWItemSlot::SwordSlot]); // Sword Icon
+	temp.itemStates[28] = GetItemState(28, p2Buffer[WWItemSlot::ShieldSlot - WWItemSlot::SwordSlot]); // Shield
+	temp.itemStates[29] = GetItemState(29, p2Buffer[WWItemSlot::ShieldIconSlot - WWItemSlot::SwordSlot]); // Shield Icon
+	temp.itemStates[30] = GetItemState(30, p2Buffer[WWItemSlot::BraceletSlot - WWItemSlot::SwordSlot]); // Bracelet
+	temp.itemStates[31] = GetItemState(31, p2Buffer[WWItemSlot::BraceletIconSlot - WWItemSlot::SwordSlot]); // Bracelet Icon
+	temp.itemStates[32] = GetItemState(32, p2Buffer[WWItemSlot::HerosCharmSlot - WWItemSlot::SwordSlot]); // Hero's Charm
 
+	temp.itemStates[33] = GetItemState(33, p2Buffer[WWItemSlot::WalletSlot - WWItemSlot::SwordSlot]); // Wallet
+	temp.itemStates[34] = GetItemState(34, p2Buffer[WWItemSlot::MagicSlot - WWItemSlot::SwordSlot]); // Magic
+	temp.itemStates[35] = GetItemState(35, p2Buffer[WWItemSlot::BowMaxAmmo - WWItemSlot::SwordSlot]); // Bow Capacity
+	temp.itemStates[36] = GetItemState(36, p2Buffer[WWItemSlot::BombsMaxAmmo - WWItemSlot::SwordSlot]); // Bomb Capacity
 
 	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::SwordSlot];
 	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::SwordSlot];
