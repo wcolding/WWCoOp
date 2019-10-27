@@ -66,12 +66,30 @@ void WriteMappedState(HANDLE h, int index, int state)
 void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 {
 	int i, c;
+	__int8 equipBuffer[3]; 
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 
 	for (i = 0; i < 21; i++)
 	{
 		// Only write changed values
-		if (patch.itemStates[i] != 0)
+		if (patch.itemStates[i] != 0) 
+		{
 			WriteMappedState(h, i, patch.itemStates[i]);
+
+
+			if (patch.itemStates[i] > 1)
+			{
+				for (c = 0; c < 3; c++)
+				{
+					// Update equip buttons if this is an upgrade of an equipped item
+					if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item)
+					{
+						WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
+					}
+				}
+			}
+		}
+			
 	}
 
 	// Only write new mail to empty slots
@@ -99,7 +117,14 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 			WriteMappedState(h, i, patch.itemStates[i]);
 	}
 
-	// reread triforce and songs and OR them with patch value?
+	// reread triforce and songs and OR them with patch value
+	__int8 bitMaskBuffer[2];
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
+	bitMaskBuffer[0] = bitMaskBuffer[0] | patch.Songs;
+	bitMaskBuffer[1] = bitMaskBuffer[1] | patch.Triforce;
+	WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
+
+
 }
 
 int main()
