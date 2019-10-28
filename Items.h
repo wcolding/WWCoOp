@@ -64,6 +64,7 @@ typedef enum : __int8
 
 
 #define INV_OFFSET 0x003C4C44
+#define MAP_OFFSET 0x003C9D48
 
 /* The order of the inventory is as follows, left to right, row by row:
 	Starts at	0x003C4C44

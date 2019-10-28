@@ -117,7 +117,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 			WriteMappedState(h, i, patch.itemStates[i]);
 	}
 
-	// reread triforce and songs and OR them with patch value
+	// Reread triforce and songs and OR them with patch value
 	__int8 bitMaskBuffer[2];
 	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 	bitMaskBuffer[0] = bitMaskBuffer[0] | patch.Songs;
@@ -125,6 +125,20 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 	WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 
 
+}
+
+string GetCurrentMap(HANDLE h)
+{
+	char buffer[8];
+	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + MAP_OFFSET), &buffer, sizeof(buffer), nullptr);
+	int i;
+	string s;
+	for (i = 0; i < sizeof(buffer); i++)
+	{
+		if (buffer[i] != 0)
+			s.push_back(buffer[i]);
+	}
+	return s;
 }
 
 int main()
@@ -155,9 +169,20 @@ int main()
 
 	inv_swap = GetInventoryFromProcess(handle);
 	inv_master = inv_swap;
+	string oldMap, curMap;
+	curMap = GetCurrentMap(handle);
+	oldMap = curMap;
 
 	while (running)
 	{
+		curMap = GetCurrentMap(handle);
+		
+		if (curMap != oldMap)
+		{
+			cout << "Map change: " << curMap << endl;
+			oldMap = curMap;
+		}
+
 		inv_swap = GetInventoryFromProcess(handle);
 		if (InvChanged(inv_master, inv_swap))
 		{
