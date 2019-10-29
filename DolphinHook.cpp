@@ -82,7 +82,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 				for (c = 0; c < 3; c++)
 				{
 					// Update equip buttons if this is an upgrade of an equipped item
-					if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item)
+					if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item) // only works if progression is 1 state higher. normal arrows -> light arrows does not trigger
 					{
 						WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
 					}
@@ -172,14 +172,8 @@ int main()
 	string oldMap, curMap;
 	curMap = GetCurrentMap(handle);
 	oldMap = curMap;
-
-	inv_patch.itemStates[26] = 4;
-	inv_patch.itemStates[27] = 4;
-	inv_patch.itemStates[28] = 2;
-	inv_patch.itemStates[29] = 2;
-
-	inv_patch.Songs = WWSongMask::CommandMelody;
-	inv_patch.Triforce = 4;
+	//35
+	inv_patch.itemStates[12] = 3;
 
 
 	StoreInventoryToProcess(handle, inv_patch);

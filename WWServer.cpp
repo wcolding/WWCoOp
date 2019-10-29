@@ -42,3 +42,34 @@ WWServer::WWServer(int port = WW_DEFAULT_PORT)
 		listen(listener, SOMAXCONN);
 		FD_ZERO(&clientList);
 }
+
+void WWServer::AcceptConnection()
+{
+	SOCKET newConnection = accept(listener, nullptr, nullptr);
+	FD_SET(newConnection, &clientList);
+	//WWInventory newClientInv;
+	//clientInvs.push_back(newClientInv);
+}
+
+void WWServer::Update()
+{
+	AcceptConnection();
+
+	fd_set clientCopy = clientList;
+	int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
+	int i;
+	memset(&buffer, 0, sizeof(buffer));
+
+	for (i = 0; i < count; i++)
+	{
+		SOCKET curClient = clientCopy.fd_array[i];
+		bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+
+		if (bytesRead > 0)
+		{
+			//WWInventory rxInv;
+			//memcpy(&rxInv, &buffer, sizeof(WWInventory)); // may replace with custom serializion methods
+		}
+	}
+	
+}
