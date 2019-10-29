@@ -60,7 +60,7 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 
 void WriteMappedState(HANDLE h, int index, int state)
 {
-	WriteProcessMemory(h, (LPVOID)(InventoryMap[index].address), &InventoryMap[index].states[state].item, 1, nullptr);
+	WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + InventoryMap[index].address), &InventoryMap[index].states[state].item, 1, nullptr);
 }
 
 void StoreInventoryToProcess(HANDLE h, WWInventory patch)
@@ -104,7 +104,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 			{
 				if (mailBuffer[c] == WWItem::NoItem)
 				{
-					WriteProcessMemory(h, (LPVOID)(WWItemSlot::MailBagStart + c), &InventoryMap[i].states[1].item, 1, nullptr);
+					WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart + c), &InventoryMap[i].states[1].item, 1, nullptr);
 					break;
 				}
 			}
@@ -173,6 +173,18 @@ int main()
 	curMap = GetCurrentMap(handle);
 	oldMap = curMap;
 
+	inv_patch.itemStates[26] = 4;
+	inv_patch.itemStates[27] = 4;
+	inv_patch.itemStates[28] = 2;
+	inv_patch.itemStates[29] = 2;
+
+	inv_patch.Songs = WWSongMask::CommandMelody;
+	inv_patch.Triforce = 4;
+
+
+	StoreInventoryToProcess(handle, inv_patch);
+
+	/*
 	while (running)
 	{
 		curMap = GetCurrentMap(handle);
@@ -197,7 +209,7 @@ int main()
 		}
 
 		Sleep(1000);
-	};
+	};*/
 	
 	
 
