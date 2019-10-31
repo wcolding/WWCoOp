@@ -52,20 +52,47 @@ int main()
 		WSACleanup();
 		return -4;
 	}
-
+	u_long blockingFlags = 1;
+	ioctlsocket(listener, FIONBIO, &blockingFlags);
 	listen(listener, SOMAXCONN);
 	FD_ZERO(&clientList);
+	char buffer[WWINV_BUFFER_LENGTH];
+	int bytesRead = 0;
+	vector<char*> clientBuffers;
 
 	while (true)
 	{
+		
 		SOCKET newConnection = INVALID_SOCKET;
+		ioctlsocket(newConnection, FIONBIO, &blockingFlags);
 		newConnection = accept(listener, nullptr, nullptr);
 		if (newConnection != INVALID_SOCKET)
 		{
 			cout << "New client connected." << endl;
 			FD_SET(newConnection, &clientList);
 			char newBuffer[WWINV_BUFFER_LENGTH];
-			//clientBuffers.push_back(newBuffer);
+			clientBuffers.push_back(newBuffer);
+		}
+		
+
+		fd_set clientCopy = clientList;
+		int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
+		memset(&buffer, 0, sizeof(buffer));
+
+		for (int i = 0; i < count; i++)
+		{
+			SOCKET curClient = clientCopy.fd_array[i];
+			bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+
+			if (bytesRead > 0)
+			{
+				//memcpy(&clientBuffers[i], &buffer, sizeof(buffer));
+				cout << "Client " << i + 1 << ": ";
+				for (int c = 0; c < bytesRead; c++)
+				{
+					cout << buffer[c];
+				}
+			}
 		}
 	}
 	return 0;
