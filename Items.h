@@ -3,6 +3,17 @@
 
 typedef enum : __int8
 {
+	GreenRupee	=	0x01, // 1
+	BlueRupee	=	0x02, // 5
+	YellowRupee	=	0x03, // 10
+	RedRupee	=	0x04, // 20
+	PurpleRupee	=	0x05, // 50
+	OrangeRupee	=	0x06, // 100
+	SilverRupee	=	0x0F, // 200
+	
+	PieceOfHeart	=	0x07, 
+	HeartContainer	=	0x08,
+	
 	Sword1	=	0x38, // Hero's Sword
 	Sword2	=	0x39, // Master Sword
 	Sword3	=	0x3A, // Half charged
@@ -43,10 +54,10 @@ typedef enum : __int8
 
 	i_WindsRequiem		=	0x6D,
 	i_BalladofGales		=	0x6E,
-	i_CommandMelody		=	0x70,
-	i_EarthGodsLyric	=	0x71,
-	i_WindGodsAria		=	0x72,
-	i_SongofPassing		=	0x6F,
+	i_CommandMelody		=	0x6F,
+	i_EarthGodsLyric	=	0x70,
+	i_WindGodsAria		=	0x71,
+	i_SongofPassing		=	0x72,
 
 	FathersLetter	=	0x98,
 	NotetoMom		=	0x99,
@@ -55,8 +66,6 @@ typedef enum : __int8
 	CabanaDeed		=	0x9C,
 	ComplimentaryID	=	0x9D,
 	FillupCoupon	=	0x9E,
-
-	PieceOfHeart	=	0x07, // or 3f?
 
 	NoItem			=	-1
 

@@ -1,10 +1,12 @@
 #include "WWServer.h"
 
 
-WWServer::WWServer(int port = WW_DEFAULT_PORT)
+WWServer::WWServer(const char *portStr)
 {
 		struct addrinfo* result = NULL;
 		struct addrinfo hints;
+
+		//const char *portStr = to_string(port).c_str();
 		
 		iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
 		if (iResult != 0)
@@ -16,9 +18,11 @@ WWServer::WWServer(int port = WW_DEFAULT_PORT)
 		hints.ai_protocol = IPPROTO_TCP;
 		hints.ai_flags = AI_PASSIVE;
 
-		iResult = getaddrinfo(NULL, (PCSTR)WW_DEFAULT_PORT, &hints, &result);
+		iResult = getaddrinfo(NULL, portStr, &hints, &result);
 		if (iResult != 0)
 		{
+			int error = WSAGetLastError();
+			cout << error << endl;
 			WSACleanup();
 			return;
 		}
@@ -27,6 +31,8 @@ WWServer::WWServer(int port = WW_DEFAULT_PORT)
 		if (listener == INVALID_SOCKET)
 		{
 			freeaddrinfo(result);
+			int error = WSAGetLastError();
+			cout << error << endl;
 			WSACleanup();
 			return;
 		}
@@ -34,7 +40,9 @@ WWServer::WWServer(int port = WW_DEFAULT_PORT)
 		iResult = bind(listener, result->ai_addr, (int)result->ai_addrlen);
 		if (iResult == SOCKET_ERROR)
 		{
-			closesocket(listener);
+			closesocket(listener); 
+			int error = WSAGetLastError();
+			cout << error << endl;
 			WSACleanup();
 			return;
 		}
@@ -43,12 +51,28 @@ WWServer::WWServer(int port = WW_DEFAULT_PORT)
 		FD_ZERO(&clientList);
 }
 
+WWServer::WWServer()
+{
+	WWServer(WW_DEFAULT_PORT);
+}
+
 void WWServer::AcceptConnection()
 {
-	SOCKET newConnection = accept(listener, nullptr, nullptr);
-	FD_SET(newConnection, &clientList);
-	//WWInventory newClientInv;
-	//clientInvs.push_back(newClientInv);
+
+	SOCKET newConnection = INVALID_SOCKET;
+	newConnection = accept(listener, nullptr, nullptr);
+	if (newConnection != INVALID_SOCKET) 
+	{
+		cout << "New client connected." << endl;
+		FD_SET(newConnection, &clientList);
+		char newBuffer[WWINV_BUFFER_LENGTH];
+		clientBuffers.push_back(newBuffer);
+	}
+	else
+	{
+		int error = WSAGetLastError();
+		//cout << error << endl;
+	}
 }
 
 void WWServer::Update()
@@ -67,8 +91,7 @@ void WWServer::Update()
 
 		if (bytesRead > 0)
 		{
-			//WWInventory rxInv;
-			//memcpy(&rxInv, &buffer, sizeof(WWInventory)); // may replace with custom serializion methods
+			memcpy(&clientBuffers[i], &buffer, WWINV_BUFFER_LENGTH);
 		}
 	}
 	
