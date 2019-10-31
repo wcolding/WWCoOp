@@ -12,3 +12,5 @@
 #include <string>
 #include <vector>
 using namespace std;
+
+#define VERSION "0.1.0"

@@ -2,98 +2,163 @@
 #include "DolphinHook.h"
 #include "WWServer.h"
 
-int main()
+void ShowUsage();
+
+int main(int argc, char *argv[])
 {
+	cout << "Wind Waker Co-op " << VERSION << endl << endl;
+
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
 	WSADATA wsa;
 	int iResult;
 
-	SOCKET listener;
-	fd_set clientList;
-
-	//const char *portStr = to_string(port).c_str();
-
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
-	if (iResult != 0)
-		return -1; // WSAStartup failed
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	hints.ai_flags = AI_PASSIVE;
-
-	iResult = getaddrinfo(NULL, WW_DEFAULT_PORT, &hints, &result);
-	if (iResult != 0)
+	int testArg = strlen(argv[1]);
+	
+	// Server configuration
+	if (argv[1] == string("-s") || argv[1] == string("-S"))
 	{
-		int error = WSAGetLastError();
-		cout << error << endl;
-		WSACleanup();
-		return -2;
-	}
-
-	listener = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (listener == INVALID_SOCKET)
-	{
-		freeaddrinfo(result);
-		int error = WSAGetLastError();
-		cout << error << endl;
-		WSACleanup();
-		return -3;
-	}
-
-	iResult = bind(listener, result->ai_addr, (int)result->ai_addrlen);
-	if (iResult == SOCKET_ERROR)
-	{
-		closesocket(listener);
-		int error = WSAGetLastError();
-		cout << error << endl;
-		WSACleanup();
-		return -4;
-	}
-	u_long blockingFlags = 1;
-	ioctlsocket(listener, FIONBIO, &blockingFlags);
-	listen(listener, SOMAXCONN);
-	FD_ZERO(&clientList);
-	char buffer[WWINV_BUFFER_LENGTH];
-	int bytesRead = 0;
-	vector<char*> clientBuffers;
-
-	while (true)
-	{
-		
-		SOCKET newConnection = INVALID_SOCKET;
-		ioctlsocket(newConnection, FIONBIO, &blockingFlags);
-		newConnection = accept(listener, nullptr, nullptr);
-		if (newConnection != INVALID_SOCKET)
+		if (argc != 3)
 		{
-			cout << "New client connected." << endl;
-			FD_SET(newConnection, &clientList);
-			char newBuffer[WWINV_BUFFER_LENGTH];
-			clientBuffers.push_back(newBuffer);
+			ShowUsage();
+			return -1;
 		}
-		
 
-		fd_set clientCopy = clientList;
-		int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
-		memset(&buffer, 0, sizeof(buffer));
+		SOCKET listener;
+		fd_set clientList;
 
-		for (int i = 0; i < count; i++)
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
+		if (iResult != 0)
+			return -2; // WSAStartup failed
+
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+		hints.ai_flags = AI_PASSIVE;
+
+		iResult = getaddrinfo(NULL, argv[2], &hints, &result);
+		if (iResult != 0)
 		{
-			SOCKET curClient = clientCopy.fd_array[i];
-			bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+			int error = WSAGetLastError();
+			cout << error << endl;
+			WSACleanup();
+			return -3;
+		}
 
-			if (bytesRead > 0)
+		listener = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+		if (listener == INVALID_SOCKET)
+		{
+			freeaddrinfo(result);
+			int error = WSAGetLastError();
+			cout << error << endl;
+			WSACleanup();
+			return -4;
+		}
+
+		iResult = bind(listener, result->ai_addr, (int)result->ai_addrlen);
+		if (iResult == SOCKET_ERROR)
+		{
+			closesocket(listener);
+			int error = WSAGetLastError();
+			cout << error << endl;
+			WSACleanup();
+			return -5;
+		}
+		u_long blockingFlags = 1;
+		ioctlsocket(listener, FIONBIO, &blockingFlags);
+		listen(listener, SOMAXCONN);
+
+		int hook = HookDolphinProcess();
+		if (DolphinHandle == NULL)
+		{
+			cout << "Unable to hook Dolphin process." << endl;
+			return -6;
+		}
+
+		WWInventory serverInv, swapInv, patchInv;
+		serverInv = GetInventoryFromProcess();
+
+		cout << "Server started on port " << argv[2] << "..." << endl << endl;
+
+		vector<string> itemsList = GetInventoryStrings(serverInv);
+		for (int i = 0; i < itemsList.size(); i++)
+			cout << itemsList[i] << endl;
+
+		FD_ZERO(&clientList);
+		char buffer[WWINV_BUFFER_LENGTH];
+		char sendBuffer[WWINV_BUFFER_LENGTH];
+		int bytesRead = 0;
+		vector<char*> clientBuffers;
+		sockaddr_in connectedInfo;
+
+		while (true)
+		{
+			swapInv = GetInventoryFromProcess();
+			if (InvChanged(serverInv, swapInv))
 			{
-				//memcpy(&clientBuffers[i], &buffer, sizeof(buffer));
-				cout << "Client " << i + 1 << ": ";
-				for (int c = 0; c < bytesRead; c++)
+				patchInv = MakePatch(serverInv, swapInv);
+				itemsList = GetInventoryStrings(patchInv);
+				for (int i = 0; i < itemsList.size(); i++)
+					cout << itemsList[i] << endl;
+				serverInv = swapInv;
+			}
+
+			SOCKET newConnection = INVALID_SOCKET;
+			newConnection = accept(listener, (struct sockaddr*) &connectedInfo, nullptr);
+			if (newConnection != INVALID_SOCKET)
+			{
+				cout << "New client connected. " << endl;
+				FD_SET(newConnection, &clientList);
+				char newBuffer[WWINV_BUFFER_LENGTH];
+				clientBuffers.push_back(newBuffer);
+			}
+
+			fd_set clientCopy = clientList;
+			int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
+			memset(&buffer, 0, sizeof(buffer));
+
+			for (int i = 0; i < count; i++)
+			{
+				SOCKET curClient = clientCopy.fd_array[i];
+				
+				
+				memset(&sendBuffer, 0, sizeof(sendBuffer));
+				sendBuffer[0] = 0x06;
+				sendBuffer[1] = 0x09;
+				send(curClient, sendBuffer, 2, 0);
+				
+				bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+
+				if (bytesRead > 0)
 				{
-					cout << buffer[c];
+								
 				}
+
+				Sleep(WW_INTERVAL);
 			}
 		}
 	}
-	return 0;
+	// Client configuration
+	else if (argv[1] == string("-c") || argv[1] == string("-C"))
+	{
+		if (argc != 4)
+		{
+			ShowUsage();
+			return -1;
+		}
+
+		// waits for server to send request code (0x0609) and sends local inventory back as a response
+
+	}
+	else
+		ShowUsage();
+	return 1;
+}
+
+void ShowUsage()
+{
+	cout << "Usage:" << endl;
+	cout << "    -s (or -S) <port>                  Create a server on the selected port" << endl;
+	cout << "    -c (or -C) <ipaddress> <port>      Join a server at the selected address and port" << endl;
 }

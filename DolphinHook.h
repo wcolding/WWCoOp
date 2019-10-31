@@ -3,18 +3,25 @@
 
 #define BASE_OFFSET (unsigned int)0x7FFF0000
 
-HANDLE DolphinHandle;
+HANDLE DolphinHandle = NULL;
 
-WWInventory GetInventoryFromProcess(HANDLE h)
+WWInventory GetInventoryFromProcess()
 {
 	WWInventory temp;
+
+	if (DolphinHandle == NULL)
+	{
+		cout << "Need to call HookDolphinProcess() first!" << endl;
+		return temp;
+	}
+	
 	__int8 p1Buffer[21];
 	__int8 p2Buffer[177];
 	__int8 equipBuffer[3];
 	__int8 mailBuffer[8];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SwordSlot), &p2Buffer, sizeof(p2Buffer), nullptr);
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SwordSlot), &p2Buffer, sizeof(p2Buffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::SwordSlot], sizeof(mailBuffer));
 
 	int i;
@@ -61,23 +68,35 @@ WWInventory GetInventoryFromProcess(HANDLE h)
 	return temp;
 }
 
-void WriteMappedState(HANDLE h, int index, int state)
+void WriteMappedState(int index, int state)
 {
-	WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + InventoryMap[index].address), &InventoryMap[index].states[state].item, 1, nullptr);
+	if (DolphinHandle == NULL)
+	{
+		cout << "Need to call HookDolphinProcess() first!" << endl;
+		return;
+	}
+
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + InventoryMap[index].address), &InventoryMap[index].states[state].item, 1, nullptr);
 }
 
-void StoreInventoryToProcess(HANDLE h, WWInventory patch)
+void StoreInventoryToProcess(WWInventory patch)
 {
+	if (DolphinHandle == NULL)
+	{
+		cout << "Need to call HookDolphinProcess() first!" << endl;
+		return;
+	}
+
 	int i, c;
 	__int8 equipBuffer[3];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 
 	for (i = 0; i < 21; i++)
 	{
 		// Only write changed values
 		if (patch.itemStates[i] != 0)
 		{
-			WriteMappedState(h, i, patch.itemStates[i]);
+			WriteMappedState(i, patch.itemStates[i]);
 
 
 			if (patch.itemStates[i] > 1)
@@ -87,7 +106,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 					// Update equip buttons if this is an upgrade of an equipped item
 					if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item) // only works if progression is 1 state higher. normal arrows -> light arrows does not trigger
 					{
-						WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
+						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
 					}
 				}
 			}
@@ -97,7 +116,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 
 	// Only write new mail to empty slots
 	__int8 mailBuffer[8];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart), &mailBuffer, sizeof(mailBuffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart), &mailBuffer, sizeof(mailBuffer), nullptr);
 
 	for (i = 21; i < 26; i++)
 	{
@@ -107,7 +126,7 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 			{
 				if (mailBuffer[c] == WWItem::NoItem)
 				{
-					WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart + c), &InventoryMap[i].states[1].item, 1, nullptr);
+					WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::MailBagStart + c), &InventoryMap[i].states[1].item, 1, nullptr);
 					break;
 				}
 			}
@@ -117,25 +136,32 @@ void StoreInventoryToProcess(HANDLE h, WWInventory patch)
 	for (i = 26; i < 37; i++)
 	{
 		if (patch.itemStates[i] != 0)
-			WriteMappedState(h, i, patch.itemStates[i]);
+			WriteMappedState(i, patch.itemStates[i]);
 	}
 
 	// Reread triforce and songs and OR them with patch value
 	__int8 bitMaskBuffer[2];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 	bitMaskBuffer[0] = bitMaskBuffer[0] | patch.Songs;
 	bitMaskBuffer[1] = bitMaskBuffer[1] | patch.Triforce;
-	WriteProcessMemory(h, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 
 
 }
 
-string GetCurrentMap(HANDLE h)
+string GetCurrentMap()
 {
-	char buffer[8];
-	ReadProcessMemory(h, (LPVOID)(BASE_OFFSET + MAP_OFFSET), &buffer, sizeof(buffer), nullptr);
-	int i;
 	string s;
+	if (DolphinHandle == NULL)
+	{
+		cout << "Need to call HookDolphinProcess() first!" << endl;
+		return s;
+	}
+
+	char buffer[8];
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + MAP_OFFSET), &buffer, sizeof(buffer), nullptr);
+	int i;
+	
 	for (i = 0; i < sizeof(buffer); i++)
 	{
 		if (buffer[i] != 0)
