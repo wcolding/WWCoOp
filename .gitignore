@@ -1,2 +1,3 @@
-# Ignore build files
+# Ignore build and Visual Studio files
 /Debug/*
+/.vs/*
