@@ -12,8 +12,6 @@ int main(int argc, char *argv[])
 	struct addrinfo hints;
 	WSADATA wsa;
 	int iResult;
-
-	int testArg = strlen(argv[1]);
 	
 	// Server configuration
 	if (argv[1] == string("-s") || argv[1] == string("-S"))
@@ -149,6 +147,8 @@ int main(int argc, char *argv[])
 		}
 
 		// waits for server to send request code (0x0609) and sends local inventory back as a response
+		struct addrinfo* ptr = NULL;
+		SOCKET client = NULL;
 
 	}
 	else

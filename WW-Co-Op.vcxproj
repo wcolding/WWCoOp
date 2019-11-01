@@ -124,7 +124,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="WWCoop.cpp" />
-    <ClCompile Include="WWServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DolphinHook.h" />
