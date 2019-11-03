@@ -12,6 +12,11 @@ int main(int argc, char *argv[])
 	struct addrinfo hints;
 	WSADATA wsa;
 	int iResult;
+
+	char buffer[WWINV_BUFFER_LENGTH];
+	char sendBuffer[WWINV_BUFFER_LENGTH]; 
+	memset(&buffer, 0, sizeof(buffer));
+	memset(&sendBuffer, 0, sizeof(sendBuffer));
 	
 	// Server configuration
 	if (argv[1] == string("-s") || argv[1] == string("-S"))
@@ -84,8 +89,6 @@ int main(int argc, char *argv[])
 			cout << itemsList[i] << endl;
 
 		FD_ZERO(&clientList);
-		char buffer[WWINV_BUFFER_LENGTH];
-		char sendBuffer[WWINV_BUFFER_LENGTH];
 		int bytesRead = 0;
 		vector<char*> clientBuffers;
 		sockaddr_in connectedInfo;
@@ -114,7 +117,6 @@ int main(int argc, char *argv[])
 
 			fd_set clientCopy = clientList;
 			int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
-			memset(&buffer, 0, sizeof(buffer));
 
 			for (int i = 0; i < count; i++)
 			{
@@ -150,6 +152,52 @@ int main(int argc, char *argv[])
 		struct addrinfo* ptr = NULL;
 		SOCKET client = NULL;
 
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
+		if (iResult != 0)
+			return -2; // WSAStartup failed
+
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		iResult = getaddrinfo(argv[2], argv[3], &hints, &result);
+		if (iResult != 0)
+		{
+			int error = WSAGetLastError();
+			cout << error << endl;
+			WSACleanup();
+			return -3;
+		}
+
+		for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
+		{
+			client = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+			if (client == INVALID_SOCKET)
+			{
+				freeaddrinfo(result);
+				int error = WSAGetLastError();
+				cout << error << endl;
+				WSACleanup();
+				return -4;
+			}
+
+			iResult = connect(client, ptr->ai_addr, (int)ptr->ai_addrlen);
+			if (iResult == SOCKET_ERROR)
+			{
+				closesocket(client);
+				client = INVALID_SOCKET;
+				continue;
+			}
+			break;
+		}
+
+		freeaddrinfo(result);
+
+		if (client == INVALID_SOCKET)
+		{
+			WSACleanup();
+			return -5;
+		}
 	}
 	else
 		ShowUsage();
