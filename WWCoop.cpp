@@ -18,6 +18,9 @@ int main(int argc, char *argv[])
 	char sendBuffer[WWINV_BUFFER_LENGTH]; 
 	memset(&buffer, 0, sizeof(buffer));
 	memset(&sendBuffer, 0, sizeof(sendBuffer));
+	int bytesRead = 0;
+
+	vector<string> itemsList;
 	
 	// Server configuration
 	if (argv[1] == string("-s") || argv[1] == string("-S"))
@@ -85,12 +88,11 @@ int main(int argc, char *argv[])
 
 		cout << "Server started on port " << argv[2] << "..." << endl << endl;
 
-		vector<string> itemsList = GetInventoryStrings(serverInv);
+		itemsList = GetInventoryStrings(serverInv);
 		for (int i = 0; i < itemsList.size(); i++)
 			cout << itemsList[i] << endl;
 
 		FD_ZERO(&clientList);
-		int bytesRead = 0;
 		vector<char*> clientBuffers;
 		sockaddr_in connectedInfo;
 
@@ -239,20 +241,59 @@ int main(int argc, char *argv[])
 		 * 0x060A -	Write this incoming patch to the game */
 
 
-		WWInventory myInventory;
+		WWInventory myInventory, rxPatch;
+
+		myInventory = GetInventoryFromProcess();
+		itemsList = GetInventoryStrings(myInventory);
+		for (int i = 0; i < itemsList.size(); i++)
+			cout << itemsList[i] << endl;
 
 		while (true)
 		{
+			memset(&buffer, 0, sizeof(buffer));
+			memset(&sendBuffer, 0, sizeof(sendBuffer));
+			bytesRead = recv(client, buffer, sizeof(buffer), 0);
 
+			if (bytesRead >= 2)
+			{
+				short command = 0;
+				command = GetBufferCommand(buffer);
+				
+				switch(command)
+				{
+				case WW_COMMAND_POLL:
+				{
+					myInventory = GetInventoryFromProcess();
+					
+					// Lazy serialization
+					memcpy(&sendBuffer, &myInventory, sizeof(WWInventory));
+					send(client, sendBuffer, sizeof(WWInventory), 0);
+					break;
+				}
+				case WW_COMMAND_SET:
+				{
+					// Lazy deserialization
+					memcpy(&rxPatch, &buffer[2], sizeof(WWInventory));
+					itemsList = GetInventoryStrings(rxPatch);
+					for (int i = 0; i < itemsList.size(); i++)
+						cout << itemsList[i] << endl;
+					StoreInventoryToProcess(rxPatch);
+					break;
+				}
+				default:
+					break;
+				}
+			}
 		}
 
 	}
 	else
 	{
 		ShowUsage();
+		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
 void ShowUsage()
