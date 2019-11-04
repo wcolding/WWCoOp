@@ -101,6 +101,7 @@ typedef enum
 
 	SongsSlot		=	0x003C4CC5,
 	TriforceSlot	=	0x003C4CC6,
+	PearlSlot		=	0x003C4CC7,
 	
 	WalletSlot		=	0x003C4C1A,
 	MagicSlot		=	0x003C4C1B,

@@ -198,6 +198,11 @@ int main(int argc, char *argv[])
 			WSACleanup();
 			return -5;
 		}
+
+		/* Listen to first 2 bytes:
+		 * 0x0609 - Request for inventory
+		 * 0x060A -	Write this incoming patch to the game */
+
 	}
 	else
 		ShowUsage();

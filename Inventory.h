@@ -43,14 +43,14 @@ vector<WWItemInfo> InventoryMap =
 	{WWItemSlot::BraceletSlot, {{WWItem::NoItem, ""}, {WWItem::Bracelet, "Power Bracelet"}}},
 	{WWItemSlot::BraceletIconSlot, {{0x00, ""}, {0x01, ""}}},
 
-	// We won't sync the equip state of hero's charm but we'll note it
-	{WWItemSlot::HerosCharmSlot, {{0x00, ""}, {0x01, "Hero's Charm"}, {0x03, "Hero's Charm (equipped)"}}},
-
 	{WWItemSlot::WalletSlot, {{0x00, "Wallet (200)"}, {0x01, "Wallet (1000)"}, {0x02, "Wallet (5000)"}}},
 	{WWItemSlot::MagicSlot, {{0x00, ""}, {0x10, "Magic"}, {0x20, "Double Magic"}}},
 
 	{WWItemSlot::BowMaxAmmo, {{0x1E, "Quiver (30)"}, {0x3C, "Quiver (60)"}, {0x63, "Quiver (99)"}}},
-	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"}}}
+	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"}}},
+
+	// We won't sync the equip state of hero's charm but we'll note it
+	{WWItemSlot::HerosCharmSlot, {{0x00, ""}, {0x01, "Hero's Charm"}, {0x03, "Hero's Charm (equipped)"}}}
 
 };
 
@@ -59,6 +59,7 @@ struct WWInventory
 	__int8 itemStates[37];
 	__int8 Songs;
 	__int8 Triforce;
+	__int8 Pearls;
 	__int8 Hearts; // still have to find this
 	__int8 PiecesofHeart; // still have to find this
 	__int8 XButtonEquip;
@@ -70,6 +71,7 @@ struct WWInventory
 		memset(&itemStates, 0, sizeof(itemStates));
 		Songs = 0;
 		Triforce = 0;
+		Pearls = 0;
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
@@ -102,6 +104,7 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 	}
 
 	patch.Songs = oldInv.Songs ^ newInv.Songs;
+	patch.Pearls = oldInv.Pearls ^ newInv.Pearls;
 	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
 
 	return patch;
@@ -148,6 +151,13 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	if ((inv.Triforce & 0x80) != 0)
 		builder.push_back("Triforce Shard 8");
 
+	if ((inv.Pearls & WWPearlMask::Nayru) != 0)
+		builder.push_back("Nayru's Pearl");
+	if ((inv.Pearls & WWPearlMask::Din) != 0)
+		builder.push_back("Din's Pearl");
+	if ((inv.Pearls & WWPearlMask::Farore) != 0)
+		builder.push_back("Farore's Pearl");
+
 	return builder;
 }
 
@@ -160,20 +170,18 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 			return true;
 	}
 
+	if (oldInv.Songs != newInv.Songs)
+		return true;
 	if (oldInv.Triforce != newInv.Triforce)
 		return true;
-	if (oldInv.Songs != newInv.Songs)
+	if (oldInv.Pearls != newInv.Pearls)
 		return true;
 	/*
 	if (oldInv.Hearts != newInv.Hearts)
 		return true;
 	if (oldInv.PiecesofHeart != newInv.PiecesofHeart)
 		return true;
-	if (oldInv.BombsMaxAmmo != newInv.BombsMaxAmmo)
-		return true;
-	if (oldInv.BowMaxAmmo != oldInv.BowMaxAmmo)
-		return true; */
-
+	*/
 	return false;
 }
 
