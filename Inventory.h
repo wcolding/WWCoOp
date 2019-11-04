@@ -75,7 +75,30 @@ struct WWInventory
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
-	}	
+	}
+
+	void UpdateInventoryFromPatch(WWInventory patch)
+	{
+		for (int i = 0; i < sizeof(itemStates) - 1; i++)
+		{
+			if (patch.itemStates[i] > itemStates[i])
+				itemStates[i] = patch.itemStates[i];
+		}
+
+		if (patch.itemStates[36] > 0)
+			itemStates[36] = 1;
+
+		Songs		= Songs | patch.Songs;
+		Triforce	= Triforce | patch.Triforce;
+		Pearls	= Pearls | patch.Pearls;
+		
+		Hearts = patch.Hearts;
+		PiecesofHeart = patch.PiecesofHeart;
+
+		XButtonEquip = patch.XButtonEquip;
+		YButtonEquip = patch.YButtonEquip;
+		ZButtonEquip = patch.ZButtonEquip;
+	}
 };
 
 // We will use a "patch" system to only write changes and not write the entire inventory all the time

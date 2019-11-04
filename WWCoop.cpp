@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 	struct addrinfo hints;
 	WSADATA wsa;
 	int iResult;
+	u_long blockingFlags = 1;
 
 	char buffer[WWINV_BUFFER_LENGTH];
 	char sendBuffer[WWINV_BUFFER_LENGTH]; 
@@ -68,11 +69,11 @@ int main(int argc, char *argv[])
 			WSACleanup();
 			return -5;
 		}
-		u_long blockingFlags = 1;
+
 		ioctlsocket(listener, FIONBIO, &blockingFlags);
 		listen(listener, SOMAXCONN);
 
-		int hook = HookDolphinProcess();
+		HookDolphinProcess();
 		if (DolphinHandle == NULL)
 		{
 			cout << "Unable to hook Dolphin process." << endl;
@@ -110,6 +111,7 @@ int main(int argc, char *argv[])
 			if (newConnection != INVALID_SOCKET)
 			{
 				cout << "New client connected. " << endl;
+				ioctlsocket(newConnection, FIONBIO, &blockingFlags);
 				FD_SET(newConnection, &clientList);
 				char newBuffer[WWINV_BUFFER_LENGTH];
 				clientBuffers.push_back(newBuffer);
@@ -122,17 +124,42 @@ int main(int argc, char *argv[])
 			{
 				SOCKET curClient = clientCopy.fd_array[i];
 				
-				
-				memset(&sendBuffer, 0, sizeof(sendBuffer));
-				sendBuffer[0] = 0x06;
-				sendBuffer[1] = 0x09;
+				// Send a request for the client's inventory
+				SetBufferCommand(buffer, WW_COMMAND_POLL);
 				send(curClient, sendBuffer, 2, 0);
 				
 				bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
 
-				if (bytesRead > 0)
+				if (bytesRead >= sizeof(WWInventory))
 				{
-								
+					// Lazy deserialization
+					WWInventory clientInv;
+					memcpy(&clientInv, &buffer, sizeof(WWInventory));
+
+					if (InvChanged(serverInv, clientInv))
+					{
+						// Update server inventory first
+						patchInv = MakePatch(serverInv, clientInv);
+						itemsList = GetInventoryStrings(patchInv);
+						for (int i = 0; i < itemsList.size(); i++)
+							cout << itemsList[i] << endl;
+
+						swapInv = serverInv;
+						swapInv.UpdateInventoryFromPatch(patchInv);
+						StoreInventoryToProcess(patchInv);
+						serverInv = swapInv;
+
+						if (InvChanged(clientInv, serverInv))
+						{
+							// Generate and send a patch for this client
+							patchInv = MakePatch(clientInv, serverInv);
+							SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+							// Lazy serialization
+							memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+							send(curClient, sendBuffer, sizeof(WWInventory) + 2, 0);
+						}
+					}
 				}
 
 				Sleep(WW_INTERVAL);
@@ -148,7 +175,6 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		// waits for server to send request code (0x0609) and sends local inventory back as a response
 		struct addrinfo* ptr = NULL;
 		SOCKET client = NULL;
 
@@ -199,13 +225,33 @@ int main(int argc, char *argv[])
 			return -5;
 		}
 
+		ioctlsocket(client, FIONBIO, &blockingFlags);
+
+		HookDolphinProcess();
+		if (DolphinHandle == NULL)
+		{
+			cout << "Unable to hook Dolphin process." << endl;
+			return -6;
+		}
+
 		/* Listen to first 2 bytes:
 		 * 0x0609 - Request for inventory
 		 * 0x060A -	Write this incoming patch to the game */
 
+
+		WWInventory myInventory;
+
+		while (true)
+		{
+
+		}
+
 	}
 	else
+	{
 		ShowUsage();
+	}
+
 	return 1;
 }
 
