@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
 	WSADATA wsa;
 	int iResult;
 	u_long blockingFlags = 1;
@@ -38,7 +39,6 @@ int main(int argc, char *argv[])
 		if (iResult != 0)
 			return -2; // WSAStartup failed
 
-		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
