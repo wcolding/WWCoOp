@@ -14,6 +14,8 @@ int main(int argc, char *argv[])
 	WSADATA wsa;
 	int iResult;
 	u_long blockingFlags = 1;
+	timeval timeout;
+	timeout.tv_sec = 1;
 
 	char buffer[WWINV_BUFFER_LENGTH];
 	char sendBuffer[WWINV_BUFFER_LENGTH]; 
@@ -33,7 +35,7 @@ int main(int argc, char *argv[])
 		}
 
 		SOCKET listener;
-		fd_set clientList;
+		fd_set clientList, clientCopy;
 
 		iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
 		if (iResult != 0)
@@ -109,61 +111,66 @@ int main(int argc, char *argv[])
 			}
 
 			SOCKET newConnection = INVALID_SOCKET;
+			ioctlsocket(newConnection, FIONBIO, &blockingFlags); // May need to set SO_REUSEADDR
 			newConnection = accept(listener, (struct sockaddr*) &connectedInfo, nullptr);
 			if (newConnection != INVALID_SOCKET)
 			{
 				cout << "New client connected. " << endl;
-				ioctlsocket(newConnection, FIONBIO, &blockingFlags);
 				FD_SET(newConnection, &clientList);
 				char newBuffer[WWINV_BUFFER_LENGTH];
 				clientBuffers.push_back(newBuffer);
 			}
 
-			fd_set clientCopy = clientList;
-			int count = select(0, &clientCopy, nullptr, nullptr, nullptr);
+			memset(&clientCopy, 0, sizeof(clientCopy));
+			clientCopy = clientList;
+			
+			int count = select(0, &clientCopy, nullptr, nullptr, &timeout);
 
-			for (int i = 0; i < count; i++)
-			{
-				SOCKET curClient = clientCopy.fd_array[i];
-				
-				// Send a request for the client's inventory
-				SetBufferCommand(buffer, WW_COMMAND_POLL);
-				send(curClient, sendBuffer, 2, 0);
-				
-				bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
-
-				if (bytesRead >= sizeof(WWInventory))
+			//int count = clientCopy.fd_count;
+			if (count > 0)
+			{ 
+				for (int i = 0; i < count; i++)
 				{
-					// Lazy deserialization
-					WWInventory clientInv;
-					memcpy(&clientInv, &buffer, sizeof(WWInventory));
+					SOCKET curClient = clientCopy.fd_array[i];
 
-					if (InvChanged(serverInv, clientInv))
+					// Send a request for the client's inventory
+					SetBufferCommand(buffer, WW_COMMAND_POLL);
+					send(curClient, sendBuffer, 2, 0);
+
+					bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+
+					if (bytesRead >= sizeof(WWInventory))
 					{
-						// Update server inventory first
-						patchInv = MakePatch(serverInv, clientInv);
-						itemsList = GetInventoryStrings(patchInv);
-						for (int i = 0; i < itemsList.size(); i++)
-							cout << itemsList[i] << endl;
+						// Lazy deserialization
+						WWInventory clientInv;
+						memcpy(&clientInv, &buffer, sizeof(WWInventory));
 
-						swapInv = serverInv;
-						swapInv.UpdateInventoryFromPatch(patchInv);
-						StoreInventoryToProcess(patchInv);
-						serverInv = swapInv;
-
-						if (InvChanged(clientInv, serverInv))
+						if (InvChanged(serverInv, clientInv))
 						{
-							// Generate and send a patch for this client
-							patchInv = MakePatch(clientInv, serverInv);
-							SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+							// Update server inventory first
+							patchInv = MakePatch(serverInv, clientInv);
+							itemsList = GetInventoryStrings(patchInv);
+							for (int i = 0; i < itemsList.size(); i++)
+								cout << itemsList[i] << endl;
 
-							// Lazy serialization
-							memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-							send(curClient, sendBuffer, sizeof(WWInventory) + 2, 0);
+							swapInv = serverInv;
+							swapInv.UpdateInventoryFromPatch(patchInv);
+							StoreInventoryToProcess(patchInv);
+							serverInv = swapInv;
+
+							if (InvChanged(clientInv, serverInv))
+							{
+								// Generate and send a patch for this client
+								patchInv = MakePatch(clientInv, serverInv);
+								SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+								// Lazy serialization
+								memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+								send(curClient, sendBuffer, sizeof(WWInventory) + 2, 0);
+							}
 						}
 					}
 				}
-
 				Sleep(WW_INTERVAL);
 			}
 		}
