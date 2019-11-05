@@ -3,10 +3,17 @@
 #include "WWServer.h"
 
 void ShowUsage();
+UINT ListenThread(LPVOID listener);
+UINT NewClientThread(LPVOID newClient);
+
+bool running = true;
+bool verbose = true;
+
+WWInventory serverInv, swapInv, patchInv;
 
 int main(int argc, char *argv[])
 {
-	cout << "Wind Waker Co-op " << VERSION << endl << endl;
+	std::cout << "Wind Waker Co-op " << VERSION << std::endl << std::endl;
 
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
@@ -35,7 +42,7 @@ int main(int argc, char *argv[])
 		}
 
 		SOCKET listener;
-		fd_set clientList, clientCopy;
+		//fd_set clientList, clientCopy;
 
 		iResult = WSAStartup(MAKEWORD(2, 2), &wsa);
 		if (iResult != 0)
@@ -50,7 +57,7 @@ int main(int argc, char *argv[])
 		if (iResult != 0)
 		{
 			int error = WSAGetLastError();
-			cout << error << endl;
+			std::cout << error << std::endl;
 			WSACleanup();
 			return -3;
 		}
@@ -60,7 +67,7 @@ int main(int argc, char *argv[])
 		{
 			freeaddrinfo(result);
 			int error = WSAGetLastError();
-			cout << error << endl;
+			std::cout << error << std::endl;
 			WSACleanup();
 			return -4;
 		}
@@ -70,35 +77,36 @@ int main(int argc, char *argv[])
 		{
 			closesocket(listener);
 			int error = WSAGetLastError();
-			cout << error << endl;
+			std::cout << error << std::endl;
 			WSACleanup();
 			return -5;
 		}
 
-		ioctlsocket(listener, FIONBIO, &blockingFlags);
+		//ioctlsocket(listener, FIONBIO, &blockingFlags);
 		listen(listener, SOMAXCONN);
-
+		AfxBeginThread(ListenThread, (LPVOID)listener);
+		
 		HookDolphinProcess();
 		if (DolphinHandle == NULL)
 		{
-			cout << "Unable to hook Dolphin process." << endl;
+			std::cout << "Unable to hook Dolphin process." << std::endl;
 			return -6;
 		}
 
-		WWInventory serverInv, swapInv, patchInv;
+		
 		serverInv = GetInventoryFromProcess();
 
-		cout << "Server started on port " << argv[2] << "..." << endl << endl;
+		std::cout << "Server started on port " << argv[2] << "..." << std::endl << std::endl;
 
 		itemsList = GetInventoryStrings(serverInv);
 		for (int i = 0; i < itemsList.size(); i++)
-			cout << itemsList[i] << endl;
+			std::cout << itemsList[i] << std::endl;
 
-		FD_ZERO(&clientList);
-		vector<char*> clientBuffers;
-		sockaddr_in connectedInfo;
+		//FD_ZERO(&clientList);
+		//vector<char*> clientBuffers;
+		//sockaddr_in connectedInfo;
 
-		while (true)
+		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
 			if (InvChanged(serverInv, swapInv))
@@ -106,75 +114,76 @@ int main(int argc, char *argv[])
 				patchInv = MakePatch(serverInv, swapInv);
 				itemsList = GetInventoryStrings(patchInv);
 				for (int i = 0; i < itemsList.size(); i++)
-					cout << itemsList[i] << endl;
+					std::cout << itemsList[i] << std::endl;
 				serverInv = swapInv;
 			}
-
-			SOCKET newConnection = INVALID_SOCKET;
-			ioctlsocket(newConnection, FIONBIO, &blockingFlags); // May need to set SO_REUSEADDR
-			newConnection = accept(listener, (struct sockaddr*) &connectedInfo, nullptr);
-			if (newConnection != INVALID_SOCKET)
-			{
-				cout << "New client connected. " << endl;
-				FD_SET(newConnection, &clientList);
-				char newBuffer[WWINV_BUFFER_LENGTH];
-				clientBuffers.push_back(newBuffer);
-			}
-
-			memset(&clientCopy, 0, sizeof(clientCopy));
-			clientCopy = clientList;
-			
-			int count = select(0, &clientCopy, nullptr, nullptr, &timeout);
-
-			//int count = clientCopy.fd_count;
-			if (count > 0)
-			{ 
-				for (int i = 0; i < count; i++)
-				{
-					SOCKET curClient = clientCopy.fd_array[i];
-
-					// Send a request for the client's inventory
-					SetBufferCommand(buffer, WW_COMMAND_POLL);
-					send(curClient, sendBuffer, 2, 0);
-
-					bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
-
-					if (bytesRead >= sizeof(WWInventory))
-					{
-						// Lazy deserialization
-						WWInventory clientInv;
-						memcpy(&clientInv, &buffer, sizeof(WWInventory));
-
-						if (InvChanged(serverInv, clientInv))
-						{
-							// Update server inventory first
-							patchInv = MakePatch(serverInv, clientInv);
-							itemsList = GetInventoryStrings(patchInv);
-							for (int i = 0; i < itemsList.size(); i++)
-								cout << itemsList[i] << endl;
-
-							swapInv = serverInv;
-							swapInv.UpdateInventoryFromPatch(patchInv);
-							StoreInventoryToProcess(patchInv);
-							serverInv = swapInv;
-
-							if (InvChanged(clientInv, serverInv))
-							{
-								// Generate and send a patch for this client
-								patchInv = MakePatch(clientInv, serverInv);
-								SetBufferCommand(sendBuffer, WW_COMMAND_SET);
-
-								// Lazy serialization
-								memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-								send(curClient, sendBuffer, sizeof(WWInventory) + 2, 0);
-							}
-						}
-					}
-				}
-				Sleep(WW_INTERVAL);
-			}
+			Sleep(WW_INTERVAL);
 		}
+
+			//SOCKET newConnection = INVALID_SOCKET;
+			////ioctlsocket(newConnection, FIONBIO, &blockingFlags); // May need to set SO_REUSEADDR
+			//newConnection = accept(listener, (struct sockaddr*) &connectedInfo, nullptr);
+			//if (newConnection != INVALID_SOCKET)
+			//{
+			//	std::cout << "New client connected. " << std::endl;
+			//	FD_SET(newConnection, &clientList);
+			//	char newBuffer[WWINV_BUFFER_LENGTH];
+			//	clientBuffers.push_back(newBuffer);
+			//}
+
+			//memset(&clientCopy, 0, sizeof(clientCopy));
+			//clientCopy = clientList;
+			//
+			//int count = select(0, &clientCopy, nullptr, nullptr, &timeout);
+
+			////int count = clientCopy.fd_count;
+			//if (count > 0)
+			//{ 
+			//	for (int i = 0; i < count; i++)
+			//	{
+			//		SOCKET curClient = clientCopy.fd_array[i];
+
+			//		// Send a request for the client's inventory
+			//		SetBufferCommand(sendBuffer, WW_COMMAND_POLL);
+			//		send(curClient, sendBuffer, 2, 0);
+
+			//		bytesRead = recv(curClient, buffer, sizeof(buffer), 0);
+
+			//		if (bytesRead >= sizeof(WWInventory))
+			//		{
+			//			// Lazy deserialization
+			//			WWInventory clientInv;
+			//			memcpy(&clientInv, &buffer, sizeof(WWInventory));
+
+			//			if (InvChanged(serverInv, clientInv))
+			//			{
+			//				// Update server inventory first
+			//				patchInv = MakePatch(serverInv, clientInv);
+			//				itemsList = GetInventoryStrings(patchInv);
+			//				for (int i = 0; i < itemsList.size(); i++)
+			//					std::cout << itemsList[i] << std::endl;
+
+			//				swapInv = serverInv;
+			//				swapInv.UpdateInventoryFromPatch(patchInv);
+			//				StoreInventoryToProcess(patchInv);
+			//				serverInv = swapInv;
+
+			//				if (InvChanged(clientInv, serverInv))
+			//				{
+			//					// Generate and send a patch for this client
+			//					patchInv = MakePatch(clientInv, serverInv);
+			//					SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+			//					// Lazy serialization
+			//					memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+			//					send(curClient, sendBuffer, sizeof(WWInventory) + 2, 0);
+			//				}
+			//			}
+			//		}
+			//	}
+		
 	}
+
 	// Client configuration
 	else if (argv[1] == string("-c") || argv[1] == string("-C"))
 	{
@@ -199,7 +208,7 @@ int main(int argc, char *argv[])
 		if (iResult != 0)
 		{
 			int error = WSAGetLastError();
-			cout << error << endl;
+			std::cout << error << std::endl;
 			WSACleanup();
 			return -3;
 		}
@@ -211,7 +220,7 @@ int main(int argc, char *argv[])
 			{
 				freeaddrinfo(result);
 				int error = WSAGetLastError();
-				cout << error << endl;
+				std::cout << error << std::endl;
 				WSACleanup();
 				return -4;
 			}
@@ -234,12 +243,14 @@ int main(int argc, char *argv[])
 			return -5;
 		}
 
-		ioctlsocket(client, FIONBIO, &blockingFlags);
+		std::cout << "Connected to server at " << argv[2] << ":" << argv[3] << std::endl;
+
+		//ioctlsocket(client, FIONBIO, &blockingFlags);
 
 		HookDolphinProcess();
 		if (DolphinHandle == NULL)
 		{
-			cout << "Unable to hook Dolphin process." << endl;
+			std::cout << "Unable to hook Dolphin process." << std::endl;
 			return -6;
 		}
 
@@ -253,9 +264,9 @@ int main(int argc, char *argv[])
 		myInventory = GetInventoryFromProcess();
 		itemsList = GetInventoryStrings(myInventory);
 		for (int i = 0; i < itemsList.size(); i++)
-			cout << itemsList[i] << endl;
+			std::cout << itemsList[i] << std::endl;
 
-		while (true)
+		while (running)
 		{
 			memset(&buffer, 0, sizeof(buffer));
 			memset(&sendBuffer, 0, sizeof(sendBuffer));
@@ -263,6 +274,8 @@ int main(int argc, char *argv[])
 
 			if (bytesRead >= 2)
 			{
+				if (verbose)
+					std::cout << "Message received from server" << std::endl;
 				short command = 0;
 				command = GetBufferCommand(buffer);
 				
@@ -275,15 +288,21 @@ int main(int argc, char *argv[])
 					// Lazy serialization
 					memcpy(&sendBuffer, &myInventory, sizeof(WWInventory));
 					send(client, sendBuffer, sizeof(WWInventory), 0);
+					if (verbose)
+						std::cout << "Inventory sent to server" << std::endl;
 					break;
 				}
 				case WW_COMMAND_SET:
 				{
 					// Lazy deserialization
 					memcpy(&rxPatch, &buffer[2], sizeof(WWInventory));
+
+					if (verbose)
+						std::cout << "Inventory items received from server" << std::endl;
+
 					itemsList = GetInventoryStrings(rxPatch);
 					for (int i = 0; i < itemsList.size(); i++)
-						cout << itemsList[i] << endl;
+						std::cout << itemsList[i] << std::endl;
 					StoreInventoryToProcess(rxPatch);
 					break;
 				}
@@ -305,7 +324,102 @@ int main(int argc, char *argv[])
 
 void ShowUsage()
 {
-	cout << "Usage:" << endl;
-	cout << "    -s (or -S) <port>                  Create a server on the selected port" << endl;
-	cout << "    -c (or -C) <ipaddress> <port>      Join a server at the selected address and port" << endl;
+	std::cout << "Usage:" << std::endl;
+	std::cout << "    -s (or -S) <port>                  Create a server on the selected port" << std::endl;
+	std::cout << "    -c (or -C) <ipaddress> <port>      Join a server at the selected address and port" << std::endl;
+}
+
+UINT NewClientThread(LPVOID newClient)
+{
+	SOCKET client = (SOCKET)newClient;
+	bool connected = true;
+	char buffer[WWINV_BUFFER_LENGTH];
+	char sendBuffer[WWINV_BUFFER_LENGTH];
+	int bytesRead = 0;
+	int bytesSent = 0;
+	vector<string> itemsList;
+
+	while (running && connected)
+	{
+		// Send a request for the client's inventory
+		SetBufferCommand(sendBuffer, WW_COMMAND_POLL);
+		bytesSent = send(client, sendBuffer, 2, 0);
+		if (verbose)
+			std::cout << bytesSent << " bytes sent to client" << std::endl;
+
+		if (bytesSent == -1)
+		{
+			connected = false;
+			if (verbose)
+				std::cout << "No response from client. Terminating thread." << std::endl;
+		}
+
+		bytesRead = recv(client, buffer, sizeof(buffer), 0);
+		if (verbose)
+			std::cout << bytesRead << " bytes received from client" << std::endl;
+
+		
+
+		if (bytesRead >= sizeof(WWInventory))
+		{
+			// Lazy deserialization
+			WWInventory clientInv;
+			memcpy(&clientInv, &buffer, sizeof(WWInventory));
+
+			if (InvChanged(serverInv, clientInv))
+			{
+				// Update server inventory first
+				patchInv = MakePatch(serverInv, clientInv);
+
+				if (verbose)
+					std::cout << "Updating server inventory from client inventory" << std::endl;
+
+				itemsList = GetInventoryStrings(patchInv);
+				for (int i = 0; i < itemsList.size(); i++)
+					std::cout << itemsList[i] << std::endl;
+
+				swapInv = serverInv;
+				swapInv.UpdateInventoryFromPatch(patchInv);
+				StoreInventoryToProcess(patchInv);
+				serverInv = swapInv;
+
+				if (InvChanged(clientInv, serverInv))
+				{
+					// Generate and send a patch for this client
+					patchInv = MakePatch(clientInv, serverInv);
+					SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+					// Lazy serialization
+					memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+					bytesSent = send(client, sendBuffer, sizeof(WWInventory) + 2, 0);
+
+					if (verbose)
+						std::cout << bytesSent << " bytes sent to client" << std::endl;
+				}
+			}
+		}
+		
+		Sleep(WW_INTERVAL);
+	}
+
+	closesocket(client);
+	return 0;
+}
+
+UINT ListenThread(LPVOID listenerSocket)
+{
+	SOCKET listener = (SOCKET)listenerSocket;
+	while (running)
+	{
+		SOCKET newConnection = INVALID_SOCKET;
+		newConnection = accept((SOCKET)listener, nullptr, nullptr);
+		if (newConnection != INVALID_SOCKET)
+		{
+			std::cout << "New client connected. " << std::endl;
+			AfxBeginThread(NewClientThread, (LPVOID)newConnection);
+		}
+	}
+
+	closesocket(listener);
+	return 0;
 }

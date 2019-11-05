@@ -11,7 +11,7 @@ WWInventory GetInventoryFromProcess()
 
 	if (DolphinHandle == NULL)
 	{
-		cout << "Need to call HookDolphinProcess() first!" << endl;
+		std::cout << "Need to call HookDolphinProcess() first!" << std::endl;
 		return temp;
 	}
 	
@@ -73,7 +73,7 @@ void WriteMappedState(int index, int state)
 {
 	if (DolphinHandle == NULL)
 	{
-		cout << "Need to call HookDolphinProcess() first!" << endl;
+		std::cout << "Need to call HookDolphinProcess() first!" << std::endl;
 		return;
 	}
 
@@ -84,7 +84,7 @@ void StoreInventoryToProcess(WWInventory patch)
 {
 	if (DolphinHandle == NULL)
 	{
-		cout << "Need to call HookDolphinProcess() first!" << endl;
+		std::cout << "Need to call HookDolphinProcess() first!" << std::endl;
 		return;
 	}
 
@@ -159,7 +159,7 @@ string GetCurrentMap()
 	string s;
 	if (DolphinHandle == NULL)
 	{
-		cout << "Need to call HookDolphinProcess() first!" << endl;
+		std::cout << "Need to call HookDolphinProcess() first!" << std::endl;
 		return s;
 	}
 
@@ -180,7 +180,7 @@ int HookDolphinProcess()
 	HWND window = FindWindowA(NULL, "Dolphin 5.0");
 	if (window == NULL)
 	{
-		cout << "Unable to get Dolphin window." << endl;
+		std::cout << "Unable to get Dolphin window." << std::endl;
 		return -1;
 	}
 	
@@ -189,7 +189,7 @@ int HookDolphinProcess()
 	DolphinHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process);
 	if (DolphinHandle == NULL)
 	{
-		cout << "Unable to open Dolphin process." << endl;
+		std::cout << "Unable to open Dolphin process." << std::endl;
 		return -2;
 	}
 }
