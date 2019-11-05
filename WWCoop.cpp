@@ -245,8 +245,6 @@ int main(int argc, char *argv[])
 
 		std::cout << "Connected to server at " << argv[2] << ":" << argv[3] << std::endl;
 
-		//ioctlsocket(client, FIONBIO, &blockingFlags);
-
 		HookDolphinProcess();
 		if (DolphinHandle == NULL)
 		{
@@ -352,13 +350,11 @@ UINT NewClientThread(LPVOID newClient)
 			connected = false;
 			if (verbose)
 				std::cout << "No response from client. Terminating thread." << std::endl;
+			break;
 		}
-
 		bytesRead = recv(client, buffer, sizeof(buffer), 0);
 		if (verbose)
 			std::cout << bytesRead << " bytes received from client" << std::endl;
-
-		
 
 		if (bytesRead >= sizeof(WWInventory))
 		{
