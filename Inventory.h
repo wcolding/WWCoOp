@@ -265,6 +265,8 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		builder.push_back("Treasure Chart 39");
 	if ((inv.Charts & WWChartMask::TreasureChart40) != 0)
 		builder.push_back("Treasure Chart 40");
+	if ((inv.Charts & WWChartMask::TreasureChart41) != 0)
+		builder.push_back("Treasure Chart 41");
 
 	if ((inv.Charts & WWChartMask::TriforceChart1) != 0)
 		builder.push_back("Triforce Chart 1");
