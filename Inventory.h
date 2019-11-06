@@ -92,7 +92,7 @@ struct WWInventory
 		Songs		= Songs | patch.Songs;
 		Triforce	= Triforce | patch.Triforce;
 		Pearls	= Pearls | patch.Pearls;
-		patch.Charts.SetState(Charts.GetState() | patch.Charts.GetState());
+		Charts.SetState(Charts.GetState() | patch.Charts.GetState());
 
 		Hearts = patch.Hearts;
 		PiecesofHeart = patch.PiecesofHeart;
