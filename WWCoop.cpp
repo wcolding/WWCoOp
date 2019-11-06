@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
 		}
 
 		CloseHandle(DolphinHandle);
+
 		return 0;
 	}
 	else

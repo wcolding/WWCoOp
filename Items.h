@@ -135,7 +135,7 @@ typedef enum
 	Farore	=	0x04
 } WWPearlMask;
 
-typedef enum : __int64
+typedef enum : unsigned int
 {
 	TreasureChart10	= 1,
 	TreasureChart14	= 1 << 1,
@@ -169,44 +169,85 @@ typedef enum : __int64
 	PlatformChart	= 1 << 26,
 	BeedlesChart	= 1 << 27,
 	SubmarineChart	= 1 << 28,
-	// 29-31 are skipped
-	
-	TriforceChart1 = 1 << 32,
-	TriforceChart2 = 1 << 33,
-	TriforceChart3 = 1 << 34,
-	TriforceChart4 = 1 << 35,
-	TriforceChart5 = 1 << 36,
-	TriforceChart6 = 1 << 37,
-	TriforceChart7 = 1 << 38,
-	TriforceChart8 = 1 << 39,
-	
-	TreasureChart11	= 1 << 40,
-	TreasureChart15	= 1 << 41,
-	TreasureChart30	= 1 << 42,
-	TreasureChart20	= 1 << 43,
-	TreasureChart5	= 1 << 44,
-	TreasureChart23	= 1 << 45,
-	TreasureChart31	= 1 << 46,
-	TreasureChart33	= 1 << 47,
-	
-	TreasureChart2	= 1 << 48,
-	TreasureChart38	= 1 << 49,
-	TreasureChart39	= 1 << 50,
-	TreasureChart24	= 1 << 51,
-	TreasureChart6	= 1 << 52,
-	TreasureChart12	= 1 << 53,
-	TreasureChart35	= 1 << 54,
-	TreasureChart1	= 1 << 55,
-	
-	TreasureChart29	= 1 << 56,
-	TreasureChart34	= 1 << 57,
-	TreasureChart18	= 1 << 58,
-	TreasureChart16	= 1 << 59,
-	TreasureChart28	= 1 << 60,
-	TreasureChart4	= 1 << 61,
-	TreasureChart3	= 1 << 62,
-	TreasureChart40	= 1 << 63,
-} WWChartMask;
+} WWChartMaskA;
+
+typedef enum : unsigned int
+{
+	TriforceChart1 = 1,
+	TriforceChart2 = 1 << 1,
+	TriforceChart3 = 1 << 2,
+	TriforceChart4 = 1 << 3,
+	TriforceChart5 = 1 << 4,
+	TriforceChart6 = 1 << 5,
+	TriforceChart7 = 1 << 6,
+	TriforceChart8 = 1 << 7,
+
+	TreasureChart11 = 1 << 8,
+	TreasureChart15 = 1 << 9,
+	TreasureChart30 = 1 << 10,
+	TreasureChart20 = 1 << 11,
+	TreasureChart5	= 1 << 12,
+	TreasureChart23 = 1 << 13,
+	TreasureChart31 = 1 << 14,
+	TreasureChart33 = 1 << 15,
+
+	TreasureChart2	= 1 << 16,
+	TreasureChart38 = 1 << 17,
+	TreasureChart39 = 1 << 18,
+	TreasureChart24 = 1 << 19,
+	TreasureChart6	= 1 << 20,
+	TreasureChart12 = 1 << 21,
+	TreasureChart35 = 1 << 22,
+	TreasureChart1	= 1 << 23,
+
+	TreasureChart29 = 1 << 24,
+	TreasureChart34 = 1 << 25,
+	TreasureChart18 = 1 << 26,
+	TreasureChart16 = 1 << 27,
+	TreasureChart28 = 1 << 28,
+	TreasureChart4	= 1 << 29,
+	TreasureChart3	= 1 << 30,
+	TreasureChart40 = 1 << 31
+} WWChartMaskB;
+
+struct WWChartState
+{
+	WWChartMaskA a = (WWChartMaskA)0;
+	WWChartMaskB b = (WWChartMaskB)0;
+
+	__int64 GetState()
+	{
+		return ((__int64)b << 32) + ((__int64)a);
+	}
+
+	void SetState(__int64 mask)
+	{
+		int _a = (int)mask;
+		int _b = (int)(mask >> 32);
+		a = (WWChartMaskA)_a;
+		b = (WWChartMaskB)_b;
+	}
+
+	void AddChart(WWChartMaskA chart)
+	{
+		a = (WWChartMaskA)(a | chart);
+	}
+
+	void AddChart(WWChartMaskB chart)
+	{
+		b = (WWChartMaskB)(b | chart);
+	}
+
+	bool HasChart(WWChartMaskA chart)
+	{
+		return ((a & chart) != 0);
+	}
+
+	bool HasChart(WWChartMaskB chart)
+	{
+		return ((b & chart) != 0);
+	}
+};
 
 struct WWItemState
 {
