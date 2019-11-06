@@ -313,6 +313,14 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	return builder;
 }
 
+void PrintInventory(WWInventory inv)
+{
+	vector <string> itemsList;
+	itemsList = GetInventoryStrings(inv);
+	for (int i = 0; i < itemsList.size(); i++)
+		std::cout << itemsList[i] << std::endl;
+}
+
 bool InvChanged(WWInventory oldInv, WWInventory newInv)
 {
 	int i;

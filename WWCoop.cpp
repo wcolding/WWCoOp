@@ -96,9 +96,7 @@ int main(int argc, char *argv[])
 		std::cout << "Server started on port " << argv[2] << "..." << std::endl << std::endl;
 
 		serverInv = GetInventoryFromProcess();
-		itemsList = GetInventoryStrings(serverInv);
-		for (int i = 0; i < itemsList.size(); i++)
-			std::cout << itemsList[i] << std::endl;
+		PrintInventory(serverInv);
 
 		while (running)
 		{
@@ -106,13 +104,14 @@ int main(int argc, char *argv[])
 			if (InvChanged(serverInv, swapInv))
 			{
 				patchInv = MakePatch(serverInv, swapInv);
-				itemsList = GetInventoryStrings(patchInv);
-				for (int i = 0; i < itemsList.size(); i++)
-					std::cout << itemsList[i] << std::endl;
+				PrintInventory(patchInv);
 				serverInv = swapInv;
 			}
 			Sleep(WW_INTERVAL);
 		}
+
+		CloseHandle(DolphinHandle);
+		return 0;
 	}
 
 	// Client configuration
@@ -190,9 +189,7 @@ int main(int argc, char *argv[])
 		WWInventory myInventory, rxPatch;
 
 		myInventory = GetInventoryFromProcess();
-		itemsList = GetInventoryStrings(myInventory);
-		for (int i = 0; i < itemsList.size(); i++)
-			std::cout << itemsList[i] << std::endl;
+		PrintInventory(myInventory);
 
 		while (running)
 		{
@@ -228,9 +225,7 @@ int main(int argc, char *argv[])
 					if (verbose)
 						std::cout << "Inventory items received from server" << std::endl;
 
-					itemsList = GetInventoryStrings(rxPatch);
-					for (int i = 0; i < itemsList.size(); i++)
-						std::cout << itemsList[i] << std::endl;
+					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
 					break;
 				}
@@ -238,7 +233,38 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
+
+			CloseHandle(DolphinHandle);
+			return 0;
 		}
+	}
+	// Test mode, no networking
+	else if (argv[1] == string("-testmode"))
+	{
+		HookDolphinProcess();
+		if (DolphinHandle == NULL)
+		{
+			std::cout << "Unable to hook Dolphin process." << std::endl;
+			return -6;
+		}
+
+		serverInv = GetInventoryFromProcess();
+		PrintInventory(serverInv);
+
+		while (running)
+		{
+			swapInv = GetInventoryFromProcess();
+			if (InvChanged(serverInv, swapInv))
+			{
+				patchInv = MakePatch(serverInv, swapInv);
+				PrintInventory(patchInv);
+				serverInv = swapInv;
+			}
+			Sleep(WW_INTERVAL);
+		}
+
+		CloseHandle(DolphinHandle);
+		return 0;
 	}
 	else
 	{
@@ -255,6 +281,7 @@ void ShowUsage()
 	std::cout << "Usage:" << std::endl;
 	std::cout << "    -s (or -S) <port>                  Create a server on the selected port" << std::endl;
 	std::cout << "    -c (or -C) <ipaddress> <port>      Join a server at the selected address and port" << std::endl;
+	std::cout << "    -testmode                          Hook the game with no networking. Lists items as you acquire them" << std::endl;
 }
 
 UINT NewClientThread(LPVOID newClient)
@@ -298,9 +325,7 @@ UINT NewClientThread(LPVOID newClient)
 				if (verbose)
 					std::cout << "Updating server inventory from client inventory" << std::endl;
 
-				itemsList = GetInventoryStrings(patchInv);
-				for (int i = 0; i < itemsList.size(); i++)
-					std::cout << itemsList[i] << std::endl;
+				PrintInventory(patchInv);
 
 				swapInv = serverInv;
 				swapInv.UpdateInventoryFromPatch(patchInv);
