@@ -21,7 +21,7 @@ This is a command line program. Usage is as follows:
 
 >Start a client: WW-Co-Op -c \<ipaddress\> \<port\>  
 
-Alternatively there are two batch files provided in the Build/ folder. Edit those with the appropriate addresses, and begin your server. Clients can then join using the client batch script.
+Alternatively there are two batch files provided in the Build folder. Edit those with the appropriate addresses, and begin your server. Clients can then join using the client batch script.
 
 ## Building
 There are no releases at this time, so to run this you'll need to build it yourself. Currently only Windows 10 is being supported/targeted.
