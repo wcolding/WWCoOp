@@ -60,6 +60,7 @@ struct WWInventory
 	__int8 Songs;
 	__int8 Triforce;
 	__int8 Pearls;
+	__int64 Charts;
 	__int8 Hearts; // still have to find this
 	__int8 PiecesofHeart; // still have to find this
 	__int8 XButtonEquip;
@@ -72,6 +73,7 @@ struct WWInventory
 		Songs = 0;
 		Triforce = 0;
 		Pearls = 0;
+		Charts = 0;
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
@@ -91,7 +93,8 @@ struct WWInventory
 		Songs		= Songs | patch.Songs;
 		Triforce	= Triforce | patch.Triforce;
 		Pearls	= Pearls | patch.Pearls;
-		
+		Charts = Charts | patch.Charts;
+
 		Hearts = patch.Hearts;
 		PiecesofHeart = patch.PiecesofHeart;
 
@@ -129,6 +132,7 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 	patch.Songs = oldInv.Songs ^ newInv.Songs;
 	patch.Pearls = oldInv.Pearls ^ newInv.Pearls;
 	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
+	patch.Charts = oldInv.Charts ^ newInv.Charts;
 
 	return patch;
 }
@@ -181,6 +185,129 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	if ((inv.Pearls & WWPearlMask::Farore) != 0)
 		builder.push_back("Farore's Pearl");
 
+	if ((inv.Charts & WWChartMask::TreasureChart1) != 0)
+		builder.push_back("Treasure Chart 1");
+	if ((inv.Charts & WWChartMask::TreasureChart2) != 0)
+		builder.push_back("Treasure Chart 2");
+	if ((inv.Charts & WWChartMask::TreasureChart3) != 0)
+		builder.push_back("Treasure Chart 3");
+	if ((inv.Charts & WWChartMask::TreasureChart4) != 0)
+		builder.push_back("Treasure Chart 4");
+	if ((inv.Charts & WWChartMask::TreasureChart5) != 0)
+		builder.push_back("Treasure Chart 5");
+	if ((inv.Charts & WWChartMask::TreasureChart6) != 0)
+		builder.push_back("Treasure Chart 6");
+	if ((inv.Charts & WWChartMask::TreasureChart7) != 0)
+		builder.push_back("Treasure Chart 7");
+	if ((inv.Charts & WWChartMask::TreasureChart8) != 0)
+		builder.push_back("Treasure Chart 8");
+	if ((inv.Charts & WWChartMask::TreasureChart9) != 0)
+		builder.push_back("Treasure Chart 9");
+	if ((inv.Charts & WWChartMask::TreasureChart10) != 0)
+		builder.push_back("Treasure Chart 10");
+	if ((inv.Charts & WWChartMask::TreasureChart11) != 0)
+		builder.push_back("Treasure Chart 11");
+	if ((inv.Charts & WWChartMask::TreasureChart12) != 0)
+		builder.push_back("Treasure Chart 12");
+	if ((inv.Charts & WWChartMask::TreasureChart13) != 0)
+		builder.push_back("Treasure Chart 13");
+	if ((inv.Charts & WWChartMask::TreasureChart14) != 0)
+		builder.push_back("Treasure Chart 14");
+	if ((inv.Charts & WWChartMask::TreasureChart15) != 0)
+		builder.push_back("Treasure Chart 15");
+	if ((inv.Charts & WWChartMask::TreasureChart16) != 0)
+		builder.push_back("Treasure Chart 16");
+	if ((inv.Charts & WWChartMask::TreasureChart17) != 0)
+		builder.push_back("Treasure Chart 17");
+	if ((inv.Charts & WWChartMask::TreasureChart18) != 0)
+		builder.push_back("Treasure Chart 18");
+	if ((inv.Charts & WWChartMask::TreasureChart19) != 0)
+		builder.push_back("Treasure Chart 19");
+	if ((inv.Charts & WWChartMask::TreasureChart20) != 0)
+		builder.push_back("Treasure Chart 20");
+	if ((inv.Charts & WWChartMask::TreasureChart21) != 0)
+		builder.push_back("Treasure Chart 21");
+	if ((inv.Charts & WWChartMask::TreasureChart22) != 0)
+		builder.push_back("Treasure Chart 22");
+	if ((inv.Charts & WWChartMask::TreasureChart23) != 0)
+		builder.push_back("Treasure Chart 23");
+	if ((inv.Charts & WWChartMask::TreasureChart24) != 0)
+		builder.push_back("Treasure Chart 24");
+	if ((inv.Charts & WWChartMask::TreasureChart25) != 0)
+		builder.push_back("Treasure Chart 25");
+	if ((inv.Charts & WWChartMask::TreasureChart26) != 0)
+		builder.push_back("Treasure Chart 26");
+	if ((inv.Charts & WWChartMask::TreasureChart27) != 0)
+		builder.push_back("Treasure Chart 27");
+	if ((inv.Charts & WWChartMask::TreasureChart28) != 0)
+		builder.push_back("Treasure Chart 28");
+	if ((inv.Charts & WWChartMask::TreasureChart29) != 0)
+		builder.push_back("Treasure Chart 29");
+	if ((inv.Charts & WWChartMask::TreasureChart30) != 0)
+		builder.push_back("Treasure Chart 30");
+	if ((inv.Charts & WWChartMask::TreasureChart31) != 0)
+		builder.push_back("Treasure Chart 31");
+	if ((inv.Charts & WWChartMask::TreasureChart32) != 0)
+		builder.push_back("Treasure Chart 32");
+	if ((inv.Charts & WWChartMask::TreasureChart33) != 0)
+		builder.push_back("Treasure Chart 33");
+	if ((inv.Charts & WWChartMask::TreasureChart34) != 0)
+		builder.push_back("Treasure Chart 34");
+	if ((inv.Charts & WWChartMask::TreasureChart35) != 0)
+		builder.push_back("Treasure Chart 35");
+	if ((inv.Charts & WWChartMask::TreasureChart36) != 0)
+		builder.push_back("Treasure Chart 36");
+	if ((inv.Charts & WWChartMask::TreasureChart37) != 0)
+		builder.push_back("Treasure Chart 37");
+	if ((inv.Charts & WWChartMask::TreasureChart38) != 0)
+		builder.push_back("Treasure Chart 38");
+	if ((inv.Charts & WWChartMask::TreasureChart39) != 0)
+		builder.push_back("Treasure Chart 39");
+	if ((inv.Charts & WWChartMask::TreasureChart40) != 0)
+		builder.push_back("Treasure Chart 40");
+
+	if ((inv.Charts & WWChartMask::TriforceChart1) != 0)
+		builder.push_back("Triforce Chart 1");
+	if ((inv.Charts & WWChartMask::TriforceChart2) != 0)
+		builder.push_back("Triforce Chart 2");
+	if ((inv.Charts & WWChartMask::TriforceChart3) != 0)
+		builder.push_back("Triforce Chart 3");
+	if ((inv.Charts & WWChartMask::TriforceChart4) != 0)
+		builder.push_back("Triforce Chart 4");
+	if ((inv.Charts & WWChartMask::TriforceChart5) != 0)
+		builder.push_back("Triforce Chart 5");
+	if ((inv.Charts & WWChartMask::TriforceChart6) != 0)
+		builder.push_back("Triforce Chart 6");
+	if ((inv.Charts & WWChartMask::TriforceChart7) != 0)
+		builder.push_back("Triforce Chart 7");
+	if ((inv.Charts & WWChartMask::TriforceChart8) != 0)
+		builder.push_back("Triforce Chart 8");
+
+	if ((inv.Charts & WWChartMask::BeedlesChart) != 0)
+		builder.push_back("Beedle's Chart");
+	if ((inv.Charts & WWChartMask::GhostShipChart) != 0)
+		builder.push_back("Ghost Ship Chart");
+	if ((inv.Charts & WWChartMask::GreatFairyChart) != 0)
+		builder.push_back("Great Fairy Chart");
+	if ((inv.Charts & WWChartMask::IncredibleChart) != 0)
+		builder.push_back("IN-credible Chart");
+	if ((inv.Charts & WWChartMask::IsleHeartsChart) != 0)
+		builder.push_back("Island Hearts Chart");
+	if ((inv.Charts & WWChartMask::LightRingChart) != 0)
+		builder.push_back("Light Ring Chart");
+	if ((inv.Charts & WWChartMask::OctoChart) != 0)
+		builder.push_back("Octo Chart");
+	if ((inv.Charts & WWChartMask::PlatformChart) != 0)
+		builder.push_back("Platform Chart");
+	if ((inv.Charts & WWChartMask::SeaHeartsChart) != 0)
+		builder.push_back("Sea Hearts Chart");
+	if ((inv.Charts & WWChartMask::SecretCaveChart) != 0)
+		builder.push_back("Secret Cave Chart");
+	if ((inv.Charts & WWChartMask::SubmarineChart) != 0)
+		builder.push_back("Submarine Chart");
+	if ((inv.Charts & WWChartMask::TinglesChart) != 0)
+		builder.push_back("Tingle's Chart");
+
 	return builder;
 }
 
@@ -198,6 +325,8 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 	if (oldInv.Triforce != newInv.Triforce)
 		return true;
 	if (oldInv.Pearls != newInv.Pearls)
+		return true;
+	if (oldInv.Charts != newInv.Charts)
 		return true;
 	/*
 	if (oldInv.Hearts != newInv.Hearts)

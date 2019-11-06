@@ -16,7 +16,7 @@ WWInventory GetInventoryFromProcess()
 	}
 	
 	__int8 p1Buffer[21];
-	__int8 p2Buffer[178];
+	__int8 p2Buffer[178]; // Need to expand this for charts
 	__int8 equipBuffer[3];
 	__int8 mailBuffer[8];
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
@@ -59,6 +59,8 @@ WWInventory GetInventoryFromProcess()
 	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::SwordSlot];
 	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::SwordSlot];
 	temp.Pearls = p2Buffer[WWItemSlot::PearlSlot - WWItemSlot::SwordSlot];
+	//temp.Charts = p2Buffer[WWItemSlot::ChartSlot - WWItemSlot::SwordSlot];
+
 	/*temp.BowMaxAmmo = buffer[WWItemSlot::BowMaxAmmo - ItemInfoStart - 1];
 	temp.BombsMaxAmmo = buffer[WWItemSlot::BombsMaxAmmo - ItemInfoStart - 1];
 	*/
@@ -144,7 +146,7 @@ void StoreInventoryToProcess(WWInventory patch)
 		WriteMappedState(36, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)
 
 	// Reread triforce and songs and OR them with patch value
-	__int8 bitMaskBuffer[3];
+	__int8 bitMaskBuffer[3]; // need to expand this for charts
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 	bitMaskBuffer[0] = bitMaskBuffer[0] | patch.Songs;
 	bitMaskBuffer[1] = bitMaskBuffer[1] | patch.Triforce;

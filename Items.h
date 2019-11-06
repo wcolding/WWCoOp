@@ -102,6 +102,8 @@ typedef enum
 	SongsSlot		=	0x003C4CC5,
 	TriforceSlot	=	0x003C4CC6,
 	PearlSlot		=	0x003C4CC7,
+	ChartSlot		=	0x003C4CDC,
+	OpenedChartSlot	=	0x003C4CEC,
 	
 	WalletSlot		=	0x003C4C1A,
 	MagicSlot		=	0x003C4C1B,
@@ -132,6 +134,79 @@ typedef enum
 	Din		=	0x02,
 	Farore	=	0x04
 } WWPearlMask;
+
+typedef enum : __int64
+{
+	TreasureChart10	= 1,
+	TreasureChart14	= 1 << 1,
+	TinglesChart	= 1 << 2,
+	GhostShipChart	= 1 << 3,
+	TreasureChart9	= 1 << 4,
+	TreasureChart22	= 1 << 5,
+	TreasureChart36	= 1 << 6,
+	TreasureChart17	= 1 << 7,
+	
+	TreasureChart25	= 1 << 8,
+	TreasureChart37	= 1 << 9,
+	TreasureChart8	= 1 << 10,
+	TreasureChart26	= 1 << 11,
+	TreasureChart41	= 1 << 12,
+	TreasureChart19	= 1 << 13,
+	TreasureChart32	= 1 << 14,
+	TreasureChart13	= 1 << 15,
+	
+	TreasureChart21	= 1 << 16,
+	TreasureChart27	= 1 << 17,
+	TreasureChart7	= 1 << 18,
+	IncredibleChart	= 1 << 19,
+	OctoChart		= 1 << 20,
+	GreatFairyChart	= 1 << 21,
+	IsleHeartsChart = 1 << 22,
+	SeaHeartsChart	= 1 << 23,
+	
+	SecretCaveChart	= 1 << 24,
+	LightRingChart	= 1 << 25,
+	PlatformChart	= 1 << 26,
+	BeedlesChart	= 1 << 27,
+	SubmarineChart	= 1 << 28,
+	// 29-31 are skipped
+	
+	TriforceChart1 = 1 << 32,
+	TriforceChart2 = 1 << 33,
+	TriforceChart3 = 1 << 34,
+	TriforceChart4 = 1 << 35,
+	TriforceChart5 = 1 << 36,
+	TriforceChart6 = 1 << 37,
+	TriforceChart7 = 1 << 38,
+	TriforceChart8 = 1 << 39,
+	
+	TreasureChart11	= 1 << 40,
+	TreasureChart15	= 1 << 41,
+	TreasureChart30	= 1 << 42,
+	TreasureChart20	= 1 << 43,
+	TreasureChart5	= 1 << 44,
+	TreasureChart23	= 1 << 45,
+	TreasureChart31	= 1 << 46,
+	TreasureChart33	= 1 << 47,
+	
+	TreasureChart2	= 1 << 48,
+	TreasureChart38	= 1 << 49,
+	TreasureChart39	= 1 << 50,
+	TreasureChart24	= 1 << 51,
+	TreasureChart6	= 1 << 52,
+	TreasureChart12	= 1 << 53,
+	TreasureChart35	= 1 << 54,
+	TreasureChart1	= 1 << 55,
+	
+	TreasureChart29	= 1 << 56,
+	TreasureChart34	= 1 << 57,
+	TreasureChart18	= 1 << 58,
+	TreasureChart16	= 1 << 59,
+	TreasureChart28	= 1 << 60,
+	TreasureChart4	= 1 << 61,
+	TreasureChart3	= 1 << 62,
+	TreasureChart40	= 1 << 63,
+} WWChartMask;
 
 struct WWItemState
 {
