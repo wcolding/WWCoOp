@@ -67,6 +67,27 @@ typedef enum : __int8
 	ComplimentaryID	=	0x9D,
 	FillupCoupon	=	0x9E,
 
+	TownFlower		=	0x8C,
+	SeaFlower		=	0x8D,
+	ExoticFlower	=	0x8E,
+	HerosFlag		=	0x8F,
+	BigCatchFlag	=	0x90,
+	BigSaleFlag		=	0x91,
+	Pinwheel		=	0x92,
+	SickleMoonFlag	=	0x93,
+	SkullTowerIdol	=	0x94,
+	FountainIdol	=	0x95,
+	PostmanStatue	=	0x96,
+	ShopGuruStatue	=	0x97,
+
+	// Unsure where/how these are stored
+	HurricaneSpin	=	0xAA,
+	TingleStatue1	=	0xA3, // Dragon
+	TingleStatue2	=	0xA4, // Forbidden
+	TingleStatue3	=	0xA5, // Goddess
+	TingleStatue4	=	0xA6, // Earth
+	TingleStatue5	=	0xA7, // Wind
+
 	NoItem			=	-1
 
 } WWItem;
@@ -108,7 +129,10 @@ typedef enum
 	WalletSlot		=	0x003C4C1A,
 	MagicSlot		=	0x003C4C1B,
 
-	MailBagStart	=	0x003C4C8E
+	MailBagStart	=	0x003C4C8E,
+
+	HeartContainers =	0x003C4C09,
+	CurrentHearts	=	0x003C4C0B
 } WWItemSlot;
 
 typedef enum
@@ -246,6 +270,26 @@ struct WWChartState
 	bool HasChart(WWChartMaskB chart)
 	{
 		return ((b & chart) != 0);
+	}
+};
+
+struct WWBagState
+{
+	__int8 slots[8];
+
+	WWBagState()
+	{
+		for (int i = 0; i < sizeof(slots); i++)
+			slots[i] = 0xFF;
+	}
+
+	void AddItem(WWItem item)
+	{
+		for (int i = 0; i < sizeof(slots); i++)
+		{
+			if (slots[i] == 0xFF)
+				slots[i] == item;
+		}
 	}
 };
 

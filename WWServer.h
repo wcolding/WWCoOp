@@ -8,6 +8,8 @@
 #define WW_COMMAND_POLL 0x0609
 #define WW_COMMAND_SET	0x060A
 
+bool verbose = true;
+
 // Clears the given buffer and writes a command to the header
 void SetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH], short command)
 {
@@ -19,6 +21,7 @@ void SetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH], short command)
 	buffer[1] = commandBuffer[0];
 }
 
+// Returns command from a given buffer
 short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 {
 	char commandBuffer[2];
@@ -31,4 +34,17 @@ short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 	short command = 0;
 	memcpy(&command, &swapBuffer, 2);
 	return command;
+}
+
+// Prints a message if verbose mode is enabled
+void LogVerbose(const char* msg)
+{
+	if (verbose)
+		std::cout << msg << std::endl;
+}
+
+void LogVerbose(const char* msg, int val)
+{
+	if (verbose)
+		std::cout << val << msg << std::endl;
 }

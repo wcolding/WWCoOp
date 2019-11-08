@@ -7,7 +7,6 @@ UINT ListenThread(LPVOID listener);
 UINT NewClientThread(LPVOID newClient);
 
 bool running = true;
-bool verbose = true;
 
 WWInventory serverInv, swapInv, patchInv;
 
@@ -199,8 +198,7 @@ int main(int argc, char *argv[])
 
 			if (bytesRead >= 2)
 			{
-				if (verbose)
-					std::cout << "Message received from server" << std::endl;
+				LogVerbose("Message received from server");
 				short command = 0;
 				command = GetBufferCommand(buffer);
 
@@ -213,8 +211,7 @@ int main(int argc, char *argv[])
 					// Lazy serialization
 					memcpy(&sendBuffer, &myInventory, sizeof(WWInventory));
 					send(client, sendBuffer, sizeof(WWInventory), 0);
-					if (verbose)
-						std::cout << "Inventory sent to server" << std::endl;
+					LogVerbose("Inventory sent to server");
 					break;
 				}
 				case WW_COMMAND_SET:
@@ -222,8 +219,7 @@ int main(int argc, char *argv[])
 					// Lazy deserialization
 					memcpy(&rxPatch, &buffer[2], sizeof(WWInventory));
 
-					if (verbose)
-						std::cout << "Inventory items received from server" << std::endl;
+					LogVerbose("Inventory items received from server");
 
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
@@ -299,18 +295,13 @@ UINT NewClientThread(LPVOID newClient)
 		// Send a request for the client's inventory
 		SetBufferCommand(sendBuffer, WW_COMMAND_POLL);
 		bytesSent = send(client, sendBuffer, 2, 0);
-		if (verbose)
-			std::cout << bytesSent << " bytes sent to client" << std::endl;
+		LogVerbose(" bytes sent to client", bytesSent);
 
 		if (bytesSent == -1)
-		{
-			if (verbose)
-				std::cout << "No response from client. Terminating thread." << std::endl;
 			goto DISCONNECT_CLIENT;
-		}
+		
 		bytesRead = recv(client, buffer, sizeof(buffer), 0);
-		if (verbose)
-			std::cout << bytesRead << " bytes received from client" << std::endl;
+		LogVerbose(" bytes received from client", bytesRead);
 
 		if (bytesRead >= sizeof(WWInventory))
 		{
@@ -323,8 +314,7 @@ UINT NewClientThread(LPVOID newClient)
 				// Update server inventory first
 				patchInv = MakePatch(serverInv, clientInv);
 
-				if (verbose)
-					std::cout << "Updating server inventory from client inventory" << std::endl;
+				LogVerbose("Updating server inventory from client inventory");
 
 				PrintInventory(patchInv);
 
@@ -343,8 +333,7 @@ UINT NewClientThread(LPVOID newClient)
 					memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
 					bytesSent = send(client, sendBuffer, sizeof(WWInventory) + 2, 0);
 
-					if (verbose)
-						std::cout << bytesSent << " bytes sent to client" << std::endl;
+					LogVerbose(" bytes sent to client", bytesSent);
 				}
 			}
 		}
@@ -352,6 +341,7 @@ UINT NewClientThread(LPVOID newClient)
 		Sleep(WW_INTERVAL);
 	}
 DISCONNECT_CLIENT:
+	LogVerbose("No response from client. Terminating thread.");
 	closesocket(client);
 	return 0;
 }

@@ -61,7 +61,7 @@ struct WWInventory
 	__int8 Triforce;
 	__int8 Pearls;
 	WWChartState Charts;
-	__int8 Hearts; // still have to find this
+	__int8 Hearts;
 	__int8 PiecesofHeart; // still have to find this
 	__int8 XButtonEquip;
 	__int8 YButtonEquip;
@@ -128,6 +128,8 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 		}
 	}
 
+	patch.Hearts = newInv.Hearts - oldInv.Hearts;
+
 	patch.Songs = oldInv.Songs ^ newInv.Songs;
 	patch.Pearls = oldInv.Pearls ^ newInv.Pearls;
 	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
@@ -140,8 +142,7 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 vector<string> GetInventoryStrings(WWInventory inv)
 {
 	vector<string> builder;
-	int i;
-	for (i = 0; i < sizeof(inv.itemStates); i++)
+	for (int i = 0; i < sizeof(inv.itemStates); i++)
 	{
 		if ((inv.itemStates[i] > 0) && (InventoryMap[i].states[inv.itemStates[i]].name != ""))
 			builder.push_back(InventoryMap[i].states[inv.itemStates[i]].name);
@@ -183,7 +184,6 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		builder.push_back("Din's Pearl");
 	if ((inv.Pearls & WWPearlMask::Farore) != 0)
 		builder.push_back("Farore's Pearl");
-
 	
 	if (inv.Charts.HasChart(TreasureChart1) != 0)
 		builder.push_back("Treasure Chart 1");
@@ -309,6 +309,10 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		builder.push_back("Submarine Chart");
 	if (inv.Charts.HasChart(TinglesChart) != 0)
 		builder.push_back("Tingle's Chart");
+
+	int heartContainers = inv.Hearts / 4;
+	for (int i = 0; i < heartContainers; i++)
+		builder.push_back("Heart Container");
 		
 	return builder;
 }
@@ -330,6 +334,8 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 			return true;
 	}
 
+	if (oldInv.Hearts != newInv.Hearts)
+		return true;
 	if (oldInv.Songs != newInv.Songs)
 		return true;
 	if (oldInv.Triforce != newInv.Triforce)
@@ -338,12 +344,7 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 		return true;
 	if (oldInv.Charts.GetState() != newInv.Charts.GetState())
 		return true;
-	/*
-	if (oldInv.Hearts != newInv.Hearts)
-		return true;
-	if (oldInv.PiecesofHeart != newInv.PiecesofHeart)
-		return true;
-	*/
+	
 	return false;
 }
 
