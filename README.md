@@ -2,14 +2,12 @@
 
 This program is intended to sync Wind Waker inventories between multiple players. It does this by hooking a running Dolphin emulator process.
 
-This project is still in its early stages, but it currently supports syncing almost all major quest items and mail/cabana deed.
+This project is still in its early stages, but it currently supports syncing almost all major quest items, mail, and charts.
 
 Things it will (hopefully) eventually sync:
 - **Trading quest items**
-- **Maps** *(Treasure, Ghost Chart, etc)*
 - **Dungeon keys**
 - **Pieces of Heart** *(as an option)*
-- **Heart Containers** *(as an option)*
 - **World states** *(Tower of the Gods risen, Hyrule portal, etc)*
 - **Chest flags** *(to avoid duplicates, particularly with mail bag items)*
 

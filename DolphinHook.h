@@ -16,13 +16,13 @@ WWInventory GetInventoryFromProcess()
 	}
 	
 	__int8 p1Buffer[21];
-	__int8 p2Buffer[178]; // Need to expand this for charts
+	__int8 p2Buffer[WWItemSlot::ChartSlot + 8 - WWItemSlot::HeartContainers];
 	__int8 equipBuffer[3];
 	__int8 mailBuffer[8];
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
-	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SwordSlot), &p2Buffer, sizeof(p2Buffer), nullptr);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::HeartContainers), &p2Buffer, sizeof(p2Buffer), nullptr);
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
-	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::SwordSlot], sizeof(mailBuffer));
+	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::HeartContainers], sizeof(mailBuffer));
 
 	int i;
 	int c;
@@ -43,27 +43,28 @@ WWInventory GetInventoryFromProcess()
 		}
 	}
 
-	temp.itemStates[26] = GetItemState(26, p2Buffer[0]); // Sword
-	temp.itemStates[27] = GetItemState(27, p2Buffer[WWItemSlot::SwordIconSlot - WWItemSlot::SwordSlot]); // Sword Icon
-	temp.itemStates[28] = GetItemState(28, p2Buffer[WWItemSlot::ShieldSlot - WWItemSlot::SwordSlot]); // Shield
-	temp.itemStates[29] = GetItemState(29, p2Buffer[WWItemSlot::ShieldIconSlot - WWItemSlot::SwordSlot]); // Shield Icon
-	temp.itemStates[30] = GetItemState(30, p2Buffer[WWItemSlot::BraceletSlot - WWItemSlot::SwordSlot]); // Bracelet
-	temp.itemStates[31] = GetItemState(31, p2Buffer[WWItemSlot::BraceletIconSlot - WWItemSlot::SwordSlot]); // Bracelet Icon
-	temp.itemStates[32] = GetItemState(32, p2Buffer[WWItemSlot::HerosCharmSlot - WWItemSlot::SwordSlot]); // Hero's Charm
+	temp.itemStates[26] = GetItemState(26, p2Buffer[WWItemSlot::SwordSlot - WWItemSlot::HeartContainers]); // Sword
+	temp.itemStates[27] = GetItemState(27, p2Buffer[WWItemSlot::SwordIconSlot - WWItemSlot::HeartContainers]); // Sword Icon
+	temp.itemStates[28] = GetItemState(28, p2Buffer[WWItemSlot::ShieldSlot - WWItemSlot::HeartContainers]); // Shield
+	temp.itemStates[29] = GetItemState(29, p2Buffer[WWItemSlot::ShieldIconSlot - WWItemSlot::HeartContainers]); // Shield Icon
+	temp.itemStates[30] = GetItemState(30, p2Buffer[WWItemSlot::BraceletSlot - WWItemSlot::HeartContainers]); // Bracelet
+	temp.itemStates[31] = GetItemState(31, p2Buffer[WWItemSlot::BraceletIconSlot - WWItemSlot::HeartContainers]); // Bracelet Icon
+	temp.itemStates[32] = GetItemState(32, p2Buffer[WWItemSlot::HerosCharmSlot - WWItemSlot::HeartContainers]); // Hero's Charm
 
-	temp.itemStates[33] = GetItemState(33, p2Buffer[WWItemSlot::WalletSlot - WWItemSlot::SwordSlot]); // Wallet
-	temp.itemStates[34] = GetItemState(34, p2Buffer[WWItemSlot::MagicSlot - WWItemSlot::SwordSlot]); // Magic
-	temp.itemStates[35] = GetItemState(35, p2Buffer[WWItemSlot::BowMaxAmmo - WWItemSlot::SwordSlot]); // Bow Capacity
-	temp.itemStates[36] = GetItemState(36, p2Buffer[WWItemSlot::BombsMaxAmmo - WWItemSlot::SwordSlot]); // Bomb Capacity
+	temp.itemStates[33] = GetItemState(33, p2Buffer[WWItemSlot::WalletSlot - WWItemSlot::HeartContainers]); // Wallet
+	temp.itemStates[34] = GetItemState(34, p2Buffer[WWItemSlot::MagicSlot - WWItemSlot::HeartContainers]); // Magic
+	temp.itemStates[35] = GetItemState(35, p2Buffer[WWItemSlot::BowMaxAmmo - WWItemSlot::HeartContainers]); // Bow Capacity
+	temp.itemStates[36] = GetItemState(36, p2Buffer[WWItemSlot::BombsMaxAmmo - WWItemSlot::HeartContainers]); // Bomb Capacity
 
-	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::SwordSlot];
-	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::SwordSlot];
-	temp.Pearls = p2Buffer[WWItemSlot::PearlSlot - WWItemSlot::SwordSlot];
-	//temp.Charts = p2Buffer[WWItemSlot::ChartSlot - WWItemSlot::SwordSlot];
+	temp.Hearts = p2Buffer[0];
+	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::HeartContainers];
+	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::HeartContainers];
+	temp.Pearls = p2Buffer[WWItemSlot::PearlSlot - WWItemSlot::HeartContainers];
+	
+	char chartBuffer[8];
+	memcpy(&chartBuffer, &p2Buffer[WWItemSlot::ChartSlot - WWItemSlot::HeartContainers], sizeof(chartBuffer));
+	temp.Charts = GetChartsFromBuffer(chartBuffer);
 
-	/*temp.BowMaxAmmo = buffer[WWItemSlot::BowMaxAmmo - ItemInfoStart - 1];
-	temp.BombsMaxAmmo = buffer[WWItemSlot::BombsMaxAmmo - ItemInfoStart - 1];
-	*/
 	temp.XButtonEquip = equipBuffer[0];
 	temp.YButtonEquip = equipBuffer[1];
 	temp.ZButtonEquip = equipBuffer[2];
@@ -146,14 +147,21 @@ void StoreInventoryToProcess(WWInventory patch)
 		WriteMappedState(36, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)
 
 	// Reread triforce and songs and OR them with patch value
-	__int8 bitMaskBuffer[3]; // need to expand this for charts
+	__int8 bitMaskBuffer[3];
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
 	bitMaskBuffer[0] = bitMaskBuffer[0] | patch.Songs;
 	bitMaskBuffer[1] = bitMaskBuffer[1] | patch.Triforce;
 	bitMaskBuffer[2] = bitMaskBuffer[2] | patch.Pearls;
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
-
-
+	
+	// Chart malarky
+	__int8 chartBuffer[8];
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+	WWChartState currentChartState = GetChartsFromBuffer(chartBuffer);
+	__int64 chartMask = currentChartState.GetState() | patch.Charts.GetState();
+	currentChartState.SetState(chartMask);
+	SetBufferFromChartState(chartBuffer, currentChartState);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
 }
 
 string GetCurrentMap()

@@ -273,14 +273,41 @@ struct WWChartState
 	}
 };
 
+WWChartState GetChartsFromBuffer(char(&buffer)[8])
+{
+	WWChartState cs;
+	char flipped[8];
+	memset(&flipped, 0, 8);
+	for (int i = 0; i < 8; i++)
+	{
+		flipped[i] = buffer[7 - i];
+	}
+	__int64 mask;
+	memcpy(&mask, &flipped, sizeof(mask));
+	cs.SetState(mask);
+	return cs;
+}
+
+void SetBufferFromChartState(char(&buffer)[8], WWChartState cs)
+{
+	char flipped[8];
+	memset(&buffer, 0, 8);
+	memset(&flipped, 0, 8);
+	__int64 mask = cs.GetState();
+	memcpy(&flipped, &mask, 8);
+	for (int i = 0; i < 8; i++)
+	{
+		buffer[i] = flipped[7 - i];
+	}
+}
+
 struct WWBagState
 {
 	__int8 slots[8];
 
 	WWBagState()
 	{
-		for (int i = 0; i < sizeof(slots); i++)
-			slots[i] = 0xFF;
+		memset(&slots, 0xFF, sizeof(slots));
 	}
 
 	void AddItem(WWItem item)

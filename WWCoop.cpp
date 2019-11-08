@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
 		serverInv = GetInventoryFromProcess();
 		PrintInventory(serverInv);
-
+		
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
@@ -260,7 +260,6 @@ int main(int argc, char *argv[])
 		}
 
 		CloseHandle(DolphinHandle);
-
 		return 0;
 	}
 	else
