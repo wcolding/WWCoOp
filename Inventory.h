@@ -61,6 +61,10 @@ struct WWInventory
 	__int8 Triforce;
 	__int8 Pearls;
 	WWChartState Charts;
+	__int8 Wallet;
+	__int8 Magic;
+	__int8 Quiver;
+	__int8 BombBag;
 	__int8 Hearts;
 	__int8 PiecesofHeart; // still have to find this
 	__int8 XButtonEquip;
@@ -73,6 +77,10 @@ struct WWInventory
 		Songs = 0;
 		Triforce = 0;
 		Pearls = 0;
+		Wallet = 0;
+		Magic = 0;
+		Quiver = 30;
+		BombBag = 30;
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
@@ -91,8 +99,13 @@ struct WWInventory
 
 		Songs		= Songs | patch.Songs;
 		Triforce	= Triforce | patch.Triforce;
-		Pearls	= Pearls | patch.Pearls;
+		Pearls		= Pearls | patch.Pearls;
 		Charts.SetState(Charts.GetState() | patch.Charts.GetState());
+
+		Wallet = patch.Wallet;
+		Magic = patch.Magic;
+		Quiver = patch.Quiver;
+		BombBag = patch.BombBag;
 
 		Hearts = patch.Hearts;
 		PiecesofHeart = patch.PiecesofHeart;
@@ -128,6 +141,11 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 		}
 	}
 
+	patch.Wallet = newInv.Wallet > oldInv.Wallet ? newInv.Wallet: 0;
+	patch.Magic = newInv.Magic > oldInv.Magic ? newInv.Magic : 0;
+	patch.Quiver = newInv.Quiver > oldInv.Quiver ? newInv.Quiver : 0;
+	patch.BombBag = newInv.BombBag > oldInv.BombBag ? newInv.BombBag : 0;
+
 	patch.Hearts = newInv.Hearts - oldInv.Hearts;
 
 	patch.Songs = oldInv.Songs ^ newInv.Songs;
@@ -146,6 +164,58 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	{
 		if ((inv.itemStates[i] > 0) && (InventoryMap[i].states[inv.itemStates[i]].name != ""))
 			builder.push_back(InventoryMap[i].states[inv.itemStates[i]].name);
+	}
+
+	switch (inv.Wallet)
+	{
+	case 0x00:
+		break;
+	case 0x01:
+		builder.push_back("Wallet (1000)");
+		break;
+	case 0x02:
+		builder.push_back("Wallet (5000)");
+	default:
+		break;
+	}
+
+	switch (inv.Magic)
+	{
+	case 0x00:
+		break;
+	case 0x10:
+		builder.push_back("Magic");
+		break;
+	case 0x20:
+		builder.push_back("Double Magic");
+	default:
+		break;
+	}
+
+	switch (inv.Quiver)
+	{
+	case 30:
+		break;
+	case 60:
+		builder.push_back("Quiver (60)");
+		break;
+	case 99:
+		builder.push_back("Quiver (99)");
+	default:
+		break;
+	}
+
+	switch (inv.BombBag)
+	{
+	case 30:
+		break;
+	case 60:
+		builder.push_back("Bomb Bag (60)");
+		break;
+	case 99:
+		builder.push_back("Bomb Bag (99)");
+	default:
+		break;
 	}
 
 	if ((inv.Songs & WWSongMask::WindsRequiem) != 0)
@@ -333,6 +403,15 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 		if (oldInv.itemStates[i] != newInv.itemStates[i])
 			return true;
 	}
+
+	if (oldInv.Wallet != newInv.Wallet)
+		return true;
+	if (oldInv.Magic != newInv.Magic)
+		return true;
+	if (oldInv.Quiver != newInv.Quiver)
+		return true;
+	if (oldInv.BombBag != newInv.BombBag)
+		return true;
 
 	if (oldInv.Hearts != newInv.Hearts)
 		return true;

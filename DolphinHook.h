@@ -51,10 +51,10 @@ WWInventory GetInventoryFromProcess()
 	temp.itemStates[31] = GetItemState(31, p2Buffer[WWItemSlot::BraceletIconSlot - WWItemSlot::HeartContainers]); // Bracelet Icon
 	temp.itemStates[32] = GetItemState(32, p2Buffer[WWItemSlot::HerosCharmSlot - WWItemSlot::HeartContainers]); // Hero's Charm
 
-	temp.itemStates[33] = GetItemState(33, p2Buffer[WWItemSlot::WalletSlot - WWItemSlot::HeartContainers]); // Wallet
-	temp.itemStates[34] = GetItemState(34, p2Buffer[WWItemSlot::MagicSlot - WWItemSlot::HeartContainers]); // Magic
-	temp.itemStates[35] = GetItemState(35, p2Buffer[WWItemSlot::BowMaxAmmo - WWItemSlot::HeartContainers]); // Bow Capacity
-	temp.itemStates[36] = GetItemState(36, p2Buffer[WWItemSlot::BombsMaxAmmo - WWItemSlot::HeartContainers]); // Bomb Capacity
+	temp.Wallet = p2Buffer[WWItemSlot::WalletSlot - WWItemSlot::HeartContainers];
+	temp.Magic = p2Buffer[WWItemSlot::MagicSlot - WWItemSlot::HeartContainers];
+	temp.Quiver = p2Buffer[WWItemSlot::BowMaxAmmo - WWItemSlot::HeartContainers];
+	temp.BombBag = p2Buffer[WWItemSlot::BombsMaxAmmo - WWItemSlot::HeartContainers];
 
 	temp.Hearts = p2Buffer[0];
 	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::HeartContainers];
@@ -137,11 +137,20 @@ void StoreInventoryToProcess(WWInventory patch)
 		}
 	}
 
-	for (i = 26; i < 36; i++)
+	for (i = 26; i < 32; i++)
 	{
 		if (patch.itemStates[i] != 0)
 			WriteMappedState(i, patch.itemStates[i]);
 	}
+
+	if (patch.Wallet > 0)
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::WalletSlot), &patch.Wallet, 1, nullptr);
+	if (patch.Magic > 0)
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::MagicSlot), &patch.Magic, 1, nullptr);
+	if (patch.Quiver > 0)
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::BowMaxAmmo), &patch.Quiver, 1, nullptr);
+	if (patch.BombBag > 0)
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::BombsMaxAmmo), &patch.BombBag, 1, nullptr);
 
 	if (patch.itemStates[36] > 0)
 		WriteMappedState(36, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)

@@ -245,8 +245,8 @@ int main(int argc, char *argv[])
 		}
 
 		std::cout << "Started in test mode." << std::endl;
-		std::cout << "Inventory size (in bytes): " << sizeof(WWInventory) << std::endl;
-		std::cout << "Packet size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
+		std::cout << "Inventory size (in bytes):      " << sizeof(WWInventory) << std::endl;
+		std::cout << "Network buffer size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
 
 		serverInv = GetInventoryFromProcess();
 		PrintInventory(serverInv);

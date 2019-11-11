@@ -318,6 +318,17 @@ struct WWBagState
 				slots[i] == item;
 		}
 	}
+
+	bool HasItem(WWItem item)
+	{
+		for (int i = 0; i < sizeof(slots); i++)
+		{
+			if (slots[i] == item)
+				return true;
+		}
+
+		return false;
+	}
 };
 
 struct WWItemState
