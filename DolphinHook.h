@@ -137,7 +137,7 @@ void StoreInventoryToProcess(WWInventory patch)
 		}
 	}
 
-	for (i = 26; i < 32; i++)
+	for (i = 26; i < sizeof(patch.itemStates); i++)
 	{
 		if (patch.itemStates[i] != 0)
 			WriteMappedState(i, patch.itemStates[i]);
@@ -152,8 +152,8 @@ void StoreInventoryToProcess(WWInventory patch)
 	if (patch.BombBag > 0)
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::BombsMaxAmmo), &patch.BombBag, 1, nullptr);
 
-	if (patch.itemStates[36] > 0)
-		WriteMappedState(36, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)
+	if (patch.itemStates[sizeof(patch.itemStates) - 1] > 0)
+		WriteMappedState(sizeof(patch.itemStates) - 1, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)
 
 	// Reread triforce and songs and OR them with patch value
 	__int8 bitMaskBuffer[3];

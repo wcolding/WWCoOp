@@ -43,20 +43,15 @@ vector<WWItemInfo> InventoryMap =
 	{WWItemSlot::BraceletSlot, {{WWItem::NoItem, ""}, {WWItem::Bracelet, "Power Bracelet"}}},
 	{WWItemSlot::BraceletIconSlot, {{0x00, ""}, {0x01, ""}}},
 
-	{WWItemSlot::WalletSlot, {{0x00, "Wallet (200)"}, {0x01, "Wallet (1000)"}, {0x02, "Wallet (5000)"}}},
-	{WWItemSlot::MagicSlot, {{0x00, ""}, {0x10, "Magic"}, {0x20, "Double Magic"}}},
-
-	{WWItemSlot::BowMaxAmmo, {{0x1E, "Quiver (30)"}, {0x3C, "Quiver (60)"}, {0x63, "Quiver (99)"}}},
-	{WWItemSlot::BombsMaxAmmo, {{0x1E, "Bomb Bag (30)"}, {0x3C, "Bomb Bag (60)"}, {0x63, "Bomb Bag (99)"}}},
-
 	// We won't sync the equip state of hero's charm but we'll note it
 	{WWItemSlot::HerosCharmSlot, {{0x00, ""}, {0x01, "Hero's Charm"}, {0x03, "Hero's Charm (equipped)"}}}
 
 };
 
+
 struct WWInventory
 {
-	__int8 itemStates[37];
+	__int8 itemStates[33];
 	__int8 Songs;
 	__int8 Triforce;
 	__int8 Pearls;
@@ -94,8 +89,8 @@ struct WWInventory
 				itemStates[i] = patch.itemStates[i];
 		}
 
-		if (patch.itemStates[36] > 0)
-			itemStates[36] = 1;
+		if (patch.itemStates[sizeof(itemStates)-1] > 0) // we may move the hero's charm out of itemStates, this is silly
+			itemStates[sizeof(itemStates) - 1] = 1;
 
 		Songs		= Songs | patch.Songs;
 		Triforce	= Triforce | patch.Triforce;
