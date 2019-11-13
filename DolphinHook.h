@@ -190,6 +190,31 @@ string GetCurrentMap()
 	{
 		if (buffer[i] != 0)
 			s.push_back(buffer[i]);
+		else
+			return s;
+	}
+	return s;
+}
+
+string GetPlayerName()
+{
+	string s;
+	if (DolphinHandle == NULL)
+	{
+		std::cout << "Need to call HookDolphinProcess() first!" << std::endl;
+		return s;
+	}
+
+	char buffer[8];
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + NAME_OFFSET), &buffer, sizeof(buffer), nullptr);
+	int i;
+
+	for (i = 0; i < sizeof(buffer); i++)
+	{
+		if (buffer[i] != 0)
+			s.push_back(buffer[i]);
+		else
+			return s;
 	}
 	return s;
 }

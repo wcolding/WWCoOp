@@ -1,6 +1,7 @@
 #include "WWCore.h"
 #include "DolphinHook.h"
 #include "WWServer.h"
+#include "WorldFlags.h"
 
 void ShowUsage();
 UINT ListenThread(LPVOID listener);
@@ -9,6 +10,8 @@ UINT NewClientThread(LPVOID newClient);
 bool running = true;
 
 WWInventory serverInv, swapInv, patchInv;
+
+vector <string> clientNames;
 
 int main(int argc, char *argv[])
 {
@@ -247,6 +250,14 @@ int main(int argc, char *argv[])
 		std::cout << "Started in test mode." << std::endl;
 		std::cout << "Inventory size (in bytes):      " << sizeof(WWInventory) << std::endl;
 		std::cout << "Network buffer size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
+
+		while (GetCurrentMap() == "sea_T" || GetCurrentMap() == "Name")
+		{
+			
+		}
+
+		string playerName = GetPlayerName();
+		std::cout << playerName << " started a game!" << std::endl << std::endl;
 
 		serverInv = GetInventoryFromProcess();
 		PrintInventory(serverInv);

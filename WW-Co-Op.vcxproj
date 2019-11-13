@@ -131,6 +131,7 @@
     <ClInclude Include="DolphinHook.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="Items.h" />
+    <ClInclude Include="WorldFlags.h" />
     <ClInclude Include="WWServer.h" />
     <ClInclude Include="WWCore.h" />
   </ItemGroup>

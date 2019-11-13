@@ -82,11 +82,11 @@ typedef enum : __int8
 
 	// Unsure where/how these are stored
 	HurricaneSpin	=	0xAA,
-	TingleStatue1	=	0xA3, // Dragon
-	TingleStatue2	=	0xA4, // Forbidden
-	TingleStatue3	=	0xA5, // Goddess
-	TingleStatue4	=	0xA6, // Earth
-	TingleStatue5	=	0xA7, // Wind
+	TingleStatue1	=	0xA3, // Dragon 00000100
+	TingleStatue2	=	0xA4, // Forbidden 00001000
+	TingleStatue3	=	0xA5, // Goddess 00010000
+	TingleStatue4	=	0xA6, // Earth 00100000
+	TingleStatue5	=	0xA7, // Wind 01000000
 
 	NoItem			=	-1
 
@@ -95,6 +95,7 @@ typedef enum : __int8
 
 #define INV_OFFSET 0x003C4C44
 #define MAP_OFFSET 0x003C9D48
+#define NAME_OFFSET 0x003C4D64
 
 /* The order of the inventory is as follows, left to right, row by row:
 	Starts at	0x003C4C44
