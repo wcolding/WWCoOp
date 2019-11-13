@@ -10,6 +10,7 @@ UINT NewClientThread(LPVOID newClient);
 bool running = true;
 
 WWInventory serverInv, swapInv, patchInv;
+WWFlags serverFlags;
 
 vector <string> clientNames;
 
@@ -248,7 +249,8 @@ int main(int argc, char *argv[])
 		}
 
 		std::cout << "Started in test mode." << std::endl;
-		std::cout << "Inventory size (in bytes):      " << sizeof(WWInventory) << std::endl;
+		std::cout << "     Inventory size (in bytes): " << sizeof(WWInventory) << std::endl;
+		std::cout << "         Flags size (in bytes): " << sizeof(WWFlags) << std::endl;
 		std::cout << "Network buffer size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
 
 		while (GetCurrentMap() == "sea_T" || GetCurrentMap() == "Name")
