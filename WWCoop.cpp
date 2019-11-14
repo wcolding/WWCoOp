@@ -10,7 +10,7 @@ UINT NewClientThread(LPVOID newClient);
 bool running = true;
 
 WWInventory localUserInv, swapInv, patchInv;
-WWFlags localUserFlags;
+WWFlags localUserFlags, swapFlags;
 
 vector <string> clientNames;
 
@@ -104,13 +104,18 @@ int main(int argc, char *argv[])
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
-			localUserFlags.GetFlagsFromProcess();
+			swapFlags = GetFlagsFromProcess();
 
 			if (InvChanged(localUserInv, swapInv))
 			{
 				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
 				localUserInv = swapInv;
+			}
+
+			if (WWFlagsChanged(localUserFlags, swapFlags) > 0)
+			{
+				PatchFlags(localUserFlags, swapFlags);
 			}
 			Sleep(WW_INTERVAL);
 		}
@@ -214,7 +219,7 @@ int main(int argc, char *argv[])
 				case WW_COMMAND_POLL:
 				{
 					localUserInv = GetInventoryFromProcess();
-					localUserFlags.GetFlagsFromProcess();
+					localUserFlags = GetFlagsFromProcess();
 
 					// Lazy serialization
 					SetBufferCommand(sendBuffer, WW_RESPONSE_POLL);
@@ -234,7 +239,8 @@ int main(int argc, char *argv[])
 
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
-					localUserFlags.PatchFlags(rxFlags);
+					if (WWFlagsChanged(localUserFlags, rxFlags) > 0)
+						PatchFlags(localUserFlags, rxFlags);
 
 					break;
 				}
@@ -273,6 +279,7 @@ int main(int argc, char *argv[])
 		std::cout << playerName << " started a game!" << std::endl << std::endl;
 
 		localUserInv = GetInventoryFromProcess();
+		localUserFlags = GetFlagsFromProcess();
 		PrintInventory(localUserInv);
 		
 		while (running)
@@ -284,6 +291,16 @@ int main(int argc, char *argv[])
 				PrintInventory(patchInv);
 				localUserInv = swapInv;
 			}
+			
+			swapFlags = GetFlagsFromProcess();
+			int numFlagsChanged = WWFlagsChanged(localUserFlags, swapFlags);
+			
+			if (numFlagsChanged > 0)
+			{
+				std::cout << numFlagsChanged << " flags changed." << std::endl;
+				localUserFlags = swapFlags;
+			}
+
 			Sleep(WW_INTERVAL);
 		}
 
@@ -362,11 +379,14 @@ UINT NewClientThread(LPVOID newClient)
 				patchInv = MakePatch(clientInv, localUserInv);
 
 				// Update server flags
-				localUserFlags.PatchFlags(clientFlags);
-				localUserFlags.StoreFlagsToProcess();
+				if (WWFlagsChanged(localUserFlags, clientFlags))
+				{
+					PatchFlags(localUserFlags, clientFlags);
+					StoreFlagsToProcess(localUserFlags);
+				}
 
 				// Update client flags
-				clientFlags.PatchFlags(localUserFlags);
+				PatchFlags(clientFlags, localUserFlags);
 
 				SetBufferCommand(sendBuffer, WW_COMMAND_SET);
 

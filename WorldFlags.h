@@ -5,6 +5,8 @@
 #define WW_LOCAL_FLAGS 0x003C5382
 #define WW_KEYS_OFFSET 0x1E
 
+#define SCENE_COUNTER 0x003CA620
+
 struct WorldFlag
 {
 	unsigned int address;
@@ -112,13 +114,36 @@ __int8 GetFlag(WorldGroupFlag flag)
 	return buffer[0];
 }
 
+// Stage name is loaded before local flags are, so we need to let the game catch up before we attempt to sync
+// This will effectively block the thread until we can ensure accurate local flags
+void YieldToSceneCounter()
+{
+	int sceneCounter = 0;
+	char counterBuffer[4];
+	memset(&counterBuffer, 0, 4);
+
+	while (sceneCounter == 0)
+	{
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &counterBuffer, sizeof(counterBuffer), nullptr);
+		for (int i = 0; i < 4; i++)
+		{
+			if (counterBuffer[i] != 0)
+			{
+				sceneCounter = 1;
+				Sleep(1000);
+			}
+		}
+		Sleep(1000/30); // Check once a frame (assuming 30 fps)
+	}
+}
+
 // This will expand as we sync more flags
 struct WWFlags
 {
-	__int8 TowerRaised = 0;
-	__int8 TingleFree = 0;
-	__int8 TingleStatues = 0;
-	__int8 GreatFairies = 0;
+	__int8 TowerRaised;
+	__int8 TingleFree;
+	__int8 TingleStatues;
+	__int8 GreatFairies;
 	__int8 DRCFlags[10];
 	__int8 FWFlags[10];
 	__int8 TotGFlags[10];
@@ -137,84 +162,173 @@ struct WWFlags
 		memset(&EarthFlags, 0, sizeof(EarthFlags));
 		memset(&WindFlags, 0, sizeof(WindFlags));
 	}
+};
 
-	void GetFlagsFromProcess()
+int FlagsChanged(__int8 byte)
+{
+	int count = 0;
+
+	if ((byte & 0x01) != 0)
+		count++;
+	if ((byte & 0x02) != 0)
+		count++;
+	if ((byte & 0x04) != 0)
+		count++;
+	if ((byte & 0x08) != 0)
+		count++;
+	if ((byte & 0x10) != 0)
+		count++;
+	if ((byte & 0x20) != 0)
+		count++;
+	if ((byte & 0x40) != 0)
+		count++;
+	if ((byte & 0x80) != 0)
+		count++;
+
+	return count;
+}
+
+int WWFlagsChanged(WWFlags oldFlags, WWFlags newFlags)
+{
+	int total = 0;
+	int sceneCounter;
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &sceneCounter, sizeof(sceneCounter), nullptr);
+
+	// Do not count flags if the game is loading a new room
+	if (sceneCounter != 0)
 	{
-		TowerRaised = GetFlag(TotGRaised);
-		TingleFree = GetFlag(TingleIsFree);
-		TingleStatues = GetFlag(DragonTingleStatue);
-		GreatFairies = GetFlag(GreatFairyGift1);
+		total += FlagsChanged(oldFlags.TowerRaised ^ newFlags.TowerRaised);
+		total += FlagsChanged(oldFlags.TingleFree ^ newFlags.TingleFree);
+		total += FlagsChanged(oldFlags.TingleStatues ^ newFlags.TingleStatues);
+		total += FlagsChanged(oldFlags.GreatFairies ^ newFlags.GreatFairies);
 
-		string currentStage = GetCurrentStage();
-
-		// If player is in the dungeon, read from the local flags address instead of the permanent one
-		if (wg_DRC.ContainsStage(currentStage))
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &DRCFlags, sizeof(DRCFlags), nullptr);
-		else
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &DRCFlags, sizeof(DRCFlags), nullptr);
-
-		if (wg_FW.ContainsStage(currentStage))
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &FWFlags, sizeof(FWFlags), nullptr);
-		else
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &FWFlags, sizeof(FWFlags), nullptr);
-
-		if (wg_TotG.ContainsStage(currentStage))
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &TotGFlags, sizeof(TotGFlags), nullptr);
-		else
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &TotGFlags, sizeof(TotGFlags), nullptr);
-
-		if (wg_Earth.ContainsStage(currentStage))
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &EarthFlags, sizeof(EarthFlags), nullptr);
-		else
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &EarthFlags, sizeof(EarthFlags), nullptr);
-
-		if (wg_Wind.ContainsStage(currentStage))
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &WindFlags, sizeof(WindFlags), nullptr);
-		else
-			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &WindFlags, sizeof(WindFlags), nullptr);
+		for (int i = 0; i < sizeof(oldFlags.DRCFlags); i++)
+			total += FlagsChanged(oldFlags.DRCFlags[i] ^ newFlags.DRCFlags[i]);
+		for (int i = 0; i < sizeof(oldFlags.FWFlags); i++)
+			total += FlagsChanged(oldFlags.FWFlags[i] ^ newFlags.FWFlags[i]);
+		for (int i = 0; i < sizeof(oldFlags.TotGFlags); i++)
+			total += FlagsChanged(oldFlags.TotGFlags[i] ^ newFlags.TotGFlags[i]);
+		for (int i = 0; i < sizeof(oldFlags.EarthFlags); i++)
+			total += FlagsChanged(oldFlags.EarthFlags[i] ^ newFlags.EarthFlags[i]);
+		for (int i = 0; i < sizeof(oldFlags.WindFlags); i++)
+			total += FlagsChanged(oldFlags.WindFlags[i] ^ newFlags.WindFlags[i]);
 	}
 
-	void StoreFlagsToProcess()
+	return total;
+}
+
+WWFlags GetFlagsFromProcess()
+{
+	WWFlags flags;
+	flags.TowerRaised = GetFlag(TotGRaised);
+	flags.TingleFree = GetFlag(TingleIsFree);
+	flags.TingleStatues = GetFlag(DragonTingleStatue);
+	flags.GreatFairies = GetFlag(GreatFairyGift1);
+
+	string currentStage = GetCurrentStage();
+
+	// If player is in the dungeon, read from the local flags address instead of the permanent one
+	if (wg_DRC.ContainsStage(currentStage))
 	{
-		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TotGRaised.address), &TowerRaised, 1, nullptr);
-		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TingleIsFree.address), &TingleFree, 1, nullptr);
-		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + DragonTingleStatue.address), &TingleStatues, 1, nullptr);
-		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + GreatFairyGift1.address), &GreatFairies, 1, nullptr);
-
-		string currentStage = GetCurrentStage();
-
-		// If player is in the dungeon, write to the local flags address instead of the permanent one
-		if (wg_DRC.ContainsStage(currentStage))
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &DRCFlags, sizeof(DRCFlags), nullptr);
-		else
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &DRCFlags, sizeof(DRCFlags), nullptr);
-
-		if (wg_FW.ContainsStage(currentStage))
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &FWFlags, sizeof(FWFlags), nullptr);
-		else
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &FWFlags, sizeof(FWFlags), nullptr);
-
-		if (wg_TotG.ContainsStage(currentStage))
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &TotGFlags, sizeof(TotGFlags), nullptr);
-		else
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &TotGFlags, sizeof(TotGFlags), nullptr);
-
-		if (wg_Earth.ContainsStage(currentStage))
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &EarthFlags, sizeof(EarthFlags), nullptr);
-		else
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &EarthFlags, sizeof(EarthFlags), nullptr);
-		
-		if (wg_Wind.ContainsStage(currentStage))
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &WindFlags, sizeof(WindFlags), nullptr);
-		else
-			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &WindFlags, sizeof(WindFlags), nullptr);
+		YieldToSceneCounter();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.DRCFlags, sizeof(flags.DRCFlags), nullptr);
 	}
+	else
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &flags.DRCFlags, sizeof(flags.DRCFlags), nullptr);
 
-	void PatchFlags(WWFlags newFlags) // Quick and dirty, will revise
+	if (wg_FW.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.FWFlags, sizeof(flags.FWFlags), nullptr);
+	}
+	else
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &flags.FWFlags, sizeof(flags.FWFlags), nullptr);
+
+	if (wg_TotG.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.TotGFlags, sizeof(flags.TotGFlags), nullptr);
+	}
+	else
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &flags.TotGFlags, sizeof(flags.TotGFlags), nullptr);
+
+	if (wg_Earth.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.EarthFlags, sizeof(flags.EarthFlags), nullptr);
+	}
+	else
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &flags.EarthFlags, sizeof(flags.EarthFlags), nullptr);
+
+	if (wg_Wind.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.WindFlags, sizeof(flags.WindFlags), nullptr);
+	}
+	else
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &flags.WindFlags, sizeof(flags.WindFlags), nullptr);
+	
+	return flags;
+}
+
+void StoreFlagsToProcess(WWFlags flags)
+{
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TotGRaised.address), &flags.TowerRaised, 1, nullptr);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TingleIsFree.address), &flags.TingleFree, 1, nullptr);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + DragonTingleStatue.address), &flags.TingleStatues, 1, nullptr);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + GreatFairyGift1.address), &flags.GreatFairies, 1, nullptr);
+
+	string currentStage = GetCurrentStage();
+
+	// If player is in the dungeon, write to the local flags address instead of the permanent one
+	if (wg_DRC.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.DRCFlags, sizeof(flags.DRCFlags), nullptr);
+	}
+	else
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &flags.DRCFlags, sizeof(flags.DRCFlags), nullptr);
+
+	if (wg_FW.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.FWFlags, sizeof(flags.FWFlags), nullptr);
+	}
+	else
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &flags.FWFlags, sizeof(flags.FWFlags), nullptr);
+
+	if (wg_TotG.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.TotGFlags, sizeof(flags.TotGFlags), nullptr);
+	}
+	else
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &flags.TotGFlags, sizeof(flags.TotGFlags), nullptr);
+
+	if (wg_Earth.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.EarthFlags, sizeof(flags.EarthFlags), nullptr);
+	}
+	else
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &flags.EarthFlags, sizeof(flags.EarthFlags), nullptr);
+
+	if (wg_Wind.ContainsStage(currentStage))
+	{
+		YieldToSceneCounter();
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags.WindFlags, sizeof(flags.WindFlags), nullptr);
+	}
+	else
+		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &flags.WindFlags, sizeof(flags.WindFlags), nullptr);
+}
+
+void PatchFlags(WWFlags oldFlags, WWFlags newFlags) // May not even use this
+{
+	if (WWFlagsChanged(oldFlags, newFlags) > 0)
 	{
 		char oldBuffer[sizeof(WWFlags)];
 		char newBuffer[sizeof(WWFlags)];
-		memcpy(&oldBuffer, this, sizeof(WWFlags));
+		memcpy(&oldBuffer, &oldFlags, sizeof(WWFlags));
 		memcpy(&newBuffer, &newFlags, sizeof(WWFlags));
 
 		for (int i = 0; i < sizeof(WWFlags); i++)
@@ -222,6 +336,6 @@ struct WWFlags
 			oldBuffer[i] = oldBuffer[i] | newBuffer[i];
 		}
 
-		memcpy(this, &oldBuffer, sizeof(WWFlags));
+		memcpy(&oldFlags, &oldBuffer, sizeof(WWFlags));
 	}
-};
+}
