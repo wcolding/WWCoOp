@@ -240,7 +240,10 @@ int main(int argc, char *argv[])
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
 					if (WWFlagsChanged(localUserFlags, rxFlags) > 0)
+					{
 						PatchFlags(localUserFlags, rxFlags);
+						StoreFlagsToProcess(localUserFlags);
+					}
 
 					break;
 				}
