@@ -104,6 +104,8 @@ int main(int argc, char *argv[])
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
+			localUserFlags.GetFlagsFromProcess();
+
 			if (InvChanged(localUserInv, swapInv))
 			{
 				patchInv = MakePatch(localUserInv, swapInv);
