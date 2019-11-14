@@ -9,8 +9,8 @@ UINT NewClientThread(LPVOID newClient);
 
 bool running = true;
 
-WWInventory serverInv, swapInv, patchInv;
-WWFlags serverFlags;
+WWInventory localUserInv, swapInv, patchInv;
+WWFlags localUserFlags;
 
 vector <string> clientNames;
 
@@ -98,17 +98,17 @@ int main(int argc, char *argv[])
 
 		std::cout << "Server started on port " << argv[2] << "..." << std::endl << std::endl;
 
-		serverInv = GetInventoryFromProcess();
-		PrintInventory(serverInv);
+		localUserInv = GetInventoryFromProcess();
+		PrintInventory(localUserInv);
 
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
-			if (InvChanged(serverInv, swapInv))
+			if (InvChanged(localUserInv, swapInv))
 			{
-				patchInv = MakePatch(serverInv, swapInv);
+				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
-				serverInv = swapInv;
+				localUserInv = swapInv;
 			}
 			Sleep(WW_INTERVAL);
 		}
@@ -186,13 +186,14 @@ int main(int argc, char *argv[])
 		}
 
 		/* Listen to first 2 bytes:
-		 * 0x0609 - Request for inventory
+		 * 0x0609 - Request for inventory/flags
 		 * 0x060A -	Write this incoming patch to the game */
 
-		WWInventory myInventory, rxPatch;
+		WWInventory rxPatch;
+		WWFlags rxFlags;
 
-		myInventory = GetInventoryFromProcess();
-		PrintInventory(myInventory);
+		localUserInv = GetInventoryFromProcess();
+		PrintInventory(localUserInv);
 
 		while (running)
 		{
@@ -210,11 +211,14 @@ int main(int argc, char *argv[])
 				{
 				case WW_COMMAND_POLL:
 				{
-					myInventory = GetInventoryFromProcess();
+					localUserInv = GetInventoryFromProcess();
+					localUserFlags.GetFlagsFromProcess();
 
 					// Lazy serialization
-					memcpy(&sendBuffer, &myInventory, sizeof(WWInventory));
-					send(client, sendBuffer, sizeof(WWInventory), 0);
+					SetBufferCommand(sendBuffer, WW_RESPONSE_POLL);
+					memcpy(&sendBuffer[2], &localUserInv, sizeof(WWInventory));
+					memcpy(&sendBuffer[2 + sizeof(WWInventory)], &localUserFlags, sizeof(WWFlags));
+					send(client, sendBuffer, 2 + sizeof(WWInventory) + sizeof(WWFlags), 0);
 					LogVerbose("Inventory sent to server");
 					break;
 				}
@@ -222,11 +226,14 @@ int main(int argc, char *argv[])
 				{
 					// Lazy deserialization
 					memcpy(&rxPatch, &buffer[2], sizeof(WWInventory));
+					memcpy(&rxFlags, &buffer[2 + sizeof(WWInventory)], sizeof(WWFlags));
 
 					LogVerbose("Inventory items received from server");
 
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
+					localUserFlags.PatchFlags(rxFlags);
+
 					break;
 				}
 				default:
@@ -251,6 +258,7 @@ int main(int argc, char *argv[])
 		std::cout << "Started in test mode." << std::endl;
 		std::cout << "     Inventory size (in bytes): " << sizeof(WWInventory) << std::endl;
 		std::cout << "         Flags size (in bytes): " << sizeof(WWFlags) << std::endl;
+		std::cout << "    Total data size (in bytes): " << 2 + sizeof(WWInventory) + sizeof(WWFlags) << std::endl;
 		std::cout << "Network buffer size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
 
 		while (GetCurrentStage() == "sea_T" || GetCurrentStage() == "Name")
@@ -261,17 +269,17 @@ int main(int argc, char *argv[])
 		string playerName = GetPlayerName();
 		std::cout << playerName << " started a game!" << std::endl << std::endl;
 
-		serverInv = GetInventoryFromProcess();
-		PrintInventory(serverInv);
+		localUserInv = GetInventoryFromProcess();
+		PrintInventory(localUserInv);
 		
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
-			if (InvChanged(serverInv, swapInv))
+			if (InvChanged(localUserInv, swapInv))
 			{
-				patchInv = MakePatch(serverInv, swapInv);
+				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
-				serverInv = swapInv;
+				localUserInv = swapInv;
 			}
 			Sleep(WW_INTERVAL);
 		}
@@ -319,38 +327,52 @@ UINT NewClientThread(LPVOID newClient)
 		bytesRead = recv(client, buffer, sizeof(buffer), 0);
 		LogVerbose(" bytes received from client", bytesRead);
 
-		if (bytesRead >= sizeof(WWInventory))
+		if (bytesRead >= (2 + sizeof(WWInventory) + sizeof(WWFlags)))
 		{
-			// Lazy deserialization
-			WWInventory clientInv;
-			memcpy(&clientInv, &buffer, sizeof(WWInventory));
+			short response = 0;
+			response = GetBufferCommand(buffer);
 
-			if (InvChanged(serverInv, clientInv))
+			if (response == WW_RESPONSE_POLL)
 			{
-				// Update server inventory first
-				patchInv = MakePatch(serverInv, clientInv);
+				// Lazy deserialization
+				WWInventory clientInv;
+				WWFlags clientFlags;
+				memcpy(&clientInv, &buffer[2], sizeof(WWInventory));
+				memcpy(&clientFlags, &buffer[2 + sizeof(WWInventory)], sizeof(WWFlags));
 
-				LogVerbose("Updating server inventory from client inventory");
-
-				PrintInventory(patchInv);
-
-				swapInv = serverInv;
-				swapInv.UpdateInventoryFromPatch(patchInv);
-				StoreInventoryToProcess(patchInv);
-				serverInv = swapInv;
-
-				if (InvChanged(clientInv, serverInv))
+				if (InvChanged(localUserInv, clientInv))
 				{
-					// Generate and send a patch for this client
-					patchInv = MakePatch(clientInv, serverInv);
-					SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+					// Update server inventory first
+					patchInv = MakePatch(localUserInv, clientInv);
 
-					// Lazy serialization
-					memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-					bytesSent = send(client, sendBuffer, sizeof(WWInventory) + 2, 0);
+					LogVerbose("Updating server inventory from client inventory");
 
-					LogVerbose(" bytes sent to client", bytesSent);
+					PrintInventory(patchInv);
+
+					swapInv = localUserInv;
+					swapInv.UpdateInventoryFromPatch(patchInv);
+					StoreInventoryToProcess(patchInv);
+					localUserInv = swapInv;
+
+					// Generate a patch for this client
+					patchInv = MakePatch(clientInv, localUserInv);					
 				}
+
+				// Update server flags
+				localUserFlags.PatchFlags(clientFlags);
+				localUserFlags.StoreFlagsToProcess();
+
+				// Update client flags
+				clientFlags.PatchFlags(localUserFlags);
+
+				SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+				// Lazy serialization
+				memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+				memcpy(&sendBuffer[2 + sizeof(WWInventory)], &clientFlags, sizeof(WWFlags));
+				bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory) + sizeof(WWFlags), 0);
+
+				LogVerbose(" bytes sent to client", bytesSent);
 			}
 		}
 		

@@ -210,7 +210,7 @@ struct WWFlags
 			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &WindFlags, sizeof(WindFlags), nullptr);
 	}
 
-	void PatchFlags(WWFlags newFlags)
+	void PatchFlags(WWFlags newFlags) // Quick and dirty, will revise
 	{
 		char oldBuffer[sizeof(WWFlags)];
 		char newBuffer[sizeof(WWFlags)];
