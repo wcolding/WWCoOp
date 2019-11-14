@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 		std::cout << "         Flags size (in bytes): " << sizeof(WWFlags) << std::endl;
 		std::cout << "Network buffer size (in bytes): " << WWINV_BUFFER_LENGTH << std::endl << std::endl;
 
-		while (GetCurrentMap() == "sea_T" || GetCurrentMap() == "Name")
+		while (GetCurrentStage() == "sea_T" || GetCurrentStage() == "Name")
 		{
 			
 		}

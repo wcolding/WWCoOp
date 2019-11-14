@@ -14,4 +14,4 @@
 #include <vector>
 using namespace std;
 
-#define VERSION "0.3.5"
+#define VERSION "0.3.8"

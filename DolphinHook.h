@@ -173,7 +173,7 @@ void StoreInventoryToProcess(WWInventory patch)
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
 }
 
-string GetCurrentMap()
+string GetCurrentStage()
 {
 	string s;
 	if (DolphinHandle == NULL)

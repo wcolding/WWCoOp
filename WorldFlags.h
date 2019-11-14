@@ -2,7 +2,8 @@
 #include "WWCore.h"
 #include "DolphinHook.h"
 
-#define WW_TEMP_FLAGS 0x003C5382
+#define WW_LOCAL_FLAGS 0x003C5382
+#define WW_KEYS_OFFSET 0x1E
 
 struct WorldFlag
 {
@@ -35,9 +36,25 @@ struct WorldGroup
 {
 	unsigned int permAddress;
 	vector <string> stageNames;
+
+	bool ContainsStage(string stage)
+	{
+		for (int i = 0; i < stageNames.size(); i++)
+		{
+			if (stageNames[i] == stage)
+				return true;
+		}
+		return false;
+	}
 };
 
-WorldGroup OutsetInterior = { 0x003C5116, {"LinkUG", "Omasao", "A_mori"} };
+WorldGroup wg_OutsetInterior = { 0x003C5116, {"LinkUG", "Omasao", "A_mori"} }; // This address gets reused as the last non-permanent flags in readable memory? Maybe? idk yet
+
+WorldGroup wg_DRC	= { 0x003C4FF6, {"M_NewD2", "M_Dra09", "M_DragB"} };
+WorldGroup wg_FW	= { 0x003C501A, {"kindan", "kinMB", "kinBOSS"} };
+WorldGroup wg_TotG	= { 0x003C503E, {"Siren", "SirenMB", "SirenB"} };
+WorldGroup wg_Earth = { 0x003C5062, {"M_Dai", "M_DaiMB", "M_DaiB"} };
+WorldGroup wg_Wind	= { 0x003C5086, {"kaze", "kazeMB", "kazeB"} }; 
 
 struct WorldGroupFlag
 {
@@ -47,9 +64,9 @@ struct WorldGroupFlag
 };
 
 // We probably won't individually address these but it's still useful information
-WorldGroupFlag OutsetLinksHouseChest = { OutsetInterior, 1, 0b00100000 };
-WorldGroupFlag OutsetGrasscutterChest = { OutsetInterior, 1, 0b00010000 };
-WorldGroupFlag OutsetFairyBoulder = { OutsetInterior, 4, 0b00010000 };
+WorldGroupFlag OutsetLinksHouseChest	= { wg_OutsetInterior, 1, 0b00100000 };
+WorldGroupFlag OutsetGrasscutterChest	= { wg_OutsetInterior, 1, 0b00010000 };
+WorldGroupFlag OutsetFairyBoulder		= { wg_OutsetInterior, 4, 0b00010000 };
 
 bool IsFlagSet(WorldFlag flag)
 {
@@ -102,6 +119,24 @@ struct WWFlags
 	__int8 TingleFree = 0;
 	__int8 TingleStatues = 0;
 	__int8 GreatFairies = 0;
+	__int8 DRCFlags[10];
+	__int8 FWFlags[10];
+	__int8 TotGFlags[10];
+	__int8 EarthFlags[18];
+	__int8 WindFlags[10];
+
+	WWFlags()
+	{
+		TowerRaised = 0;
+		TingleFree = 0;
+		TingleStatues = 0;
+		GreatFairies = 0;
+		memset(&DRCFlags, 0, sizeof(DRCFlags));
+		memset(&FWFlags, 0, sizeof(FWFlags));
+		memset(&TotGFlags, 0, sizeof(TotGFlags));
+		memset(&EarthFlags, 0, sizeof(EarthFlags));
+		memset(&WindFlags, 0, sizeof(WindFlags));
+	}
 
 	void GetFlagsFromProcess()
 	{
@@ -109,6 +144,34 @@ struct WWFlags
 		TingleFree = GetFlag(TingleIsFree);
 		TingleStatues = GetFlag(DragonTingleStatue);
 		GreatFairies = GetFlag(GreatFairyGift1);
+
+		string currentStage = GetCurrentStage();
+
+		// If player is in the dungeon, read from the local flags address instead of the permanent one
+		if (wg_DRC.ContainsStage(currentStage))
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &DRCFlags, sizeof(DRCFlags), nullptr);
+		else
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &DRCFlags, sizeof(DRCFlags), nullptr);
+
+		if (wg_FW.ContainsStage(currentStage))
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &FWFlags, sizeof(FWFlags), nullptr);
+		else
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &FWFlags, sizeof(FWFlags), nullptr);
+
+		if (wg_TotG.ContainsStage(currentStage))
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &TotGFlags, sizeof(TotGFlags), nullptr);
+		else
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &TotGFlags, sizeof(TotGFlags), nullptr);
+
+		if (wg_Earth.ContainsStage(currentStage))
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &EarthFlags, sizeof(EarthFlags), nullptr);
+		else
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &EarthFlags, sizeof(EarthFlags), nullptr);
+
+		if (wg_Wind.ContainsStage(currentStage))
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &WindFlags, sizeof(WindFlags), nullptr);
+		else
+			ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &WindFlags, sizeof(WindFlags), nullptr);
 	}
 
 	void StoreFlagsToProcess()
@@ -117,6 +180,34 @@ struct WWFlags
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TingleIsFree.address), &TingleFree, 1, nullptr);
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + DragonTingleStatue.address), &TingleStatues, 1, nullptr);
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + GreatFairyGift1.address), &GreatFairies, 1, nullptr);
+
+		string currentStage = GetCurrentStage();
+
+		// If player is in the dungeon, write to the local flags address instead of the permanent one
+		if (wg_DRC.ContainsStage(currentStage))
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &DRCFlags, sizeof(DRCFlags), nullptr);
+		else
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_DRC.permAddress), &DRCFlags, sizeof(DRCFlags), nullptr);
+
+		if (wg_FW.ContainsStage(currentStage))
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &FWFlags, sizeof(FWFlags), nullptr);
+		else
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_FW.permAddress), &FWFlags, sizeof(FWFlags), nullptr);
+
+		if (wg_TotG.ContainsStage(currentStage))
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &TotGFlags, sizeof(TotGFlags), nullptr);
+		else
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_TotG.permAddress), &TotGFlags, sizeof(TotGFlags), nullptr);
+
+		if (wg_Earth.ContainsStage(currentStage))
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &EarthFlags, sizeof(EarthFlags), nullptr);
+		else
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Earth.permAddress), &EarthFlags, sizeof(EarthFlags), nullptr);
+		
+		if (wg_Wind.ContainsStage(currentStage))
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &WindFlags, sizeof(WindFlags), nullptr);
+		else
+			WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &WindFlags, sizeof(WindFlags), nullptr);
 	}
 
 	void PatchFlags(WWFlags newFlags)
