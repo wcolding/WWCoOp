@@ -239,6 +239,9 @@ int main(int argc, char *argv[])
 
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
+
+					localUserFlags = GetFlagsFromProcess();
+
 					if (WWFlagsChanged(localUserFlags, rxFlags) > 0)
 					{
 						PatchFlags(localUserFlags, rxFlags);
@@ -380,6 +383,8 @@ UINT NewClientThread(LPVOID newClient)
 
 				// Generate a patch for this client
 				patchInv = MakePatch(clientInv, localUserInv);
+
+				localUserFlags = GetFlagsFromProcess();
 
 				// Update server flags
 				if (WWFlagsChanged(localUserFlags, clientFlags))
