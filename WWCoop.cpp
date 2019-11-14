@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
 			}
 
 		}
+
 		CloseHandle(DolphinHandle);
 		return 0;
 	}
@@ -354,11 +355,11 @@ UINT NewClientThread(LPVOID newClient)
 					swapInv = localUserInv;
 					swapInv.UpdateInventoryFromPatch(patchInv);
 					StoreInventoryToProcess(patchInv);
-					localUserInv = swapInv;
-
-					// Generate a patch for this client
-					patchInv = MakePatch(clientInv, localUserInv);					
+					localUserInv = swapInv;				
 				}
+
+				// Generate a patch for this client
+				patchInv = MakePatch(clientInv, localUserInv);
 
 				// Update server flags
 				localUserFlags.PatchFlags(clientFlags);
