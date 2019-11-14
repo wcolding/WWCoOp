@@ -12,7 +12,7 @@
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_NAME 0x090B
 
-bool verbose = true;
+bool verbose = false;
 
 // Clears the given buffer and writes a command to the header
 void SetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH], short command)

@@ -243,9 +243,9 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			CloseHandle(DolphinHandle);
-			return 0;
 		}
+		CloseHandle(DolphinHandle);
+		return 0;
 	}
 	// Test mode, no networking
 	else if (argv[1] == string("-testmode"))
