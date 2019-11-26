@@ -1,4 +1,5 @@
 # Ignore build and Visual Studio files
 /Debug/*
+/Release/*
 /.vs/*
 *.user

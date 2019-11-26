@@ -37,7 +37,10 @@ vector<WWItemInfo> InventoryMap =
 
 	// Swords, shields and bracelet must have their icon address written to in addition to the item
 	{WWItemSlot::SwordSlot, {{WWItem::NoItem, ""}, {WWItem::Sword1, "Hero's Sword"}, {WWItem::Sword2, "Master Sword"}, {WWItem::Sword3, "Master Sword (Half-Charged)"}, {WWItem::Sword4, "Master Sword (Fully-Charged)"}}},
-	{WWItemSlot::SwordIconSlot, {{0x00, ""}, {0x01, ""}, {0x02, ""}, {0x04, ""}, {0x08, ""}}},
+	// Randomizer uses this icon slot value to set progressive swords
+	// It doesn't currently account for setting a value when you have full master sword
+	// So we'll cap it at half-power master sword so as to not reset to hero's sword
+	{WWItemSlot::SwordIconSlot, {{0, ""}, {1, ""}, {3, ""}, {7, ""}, {7, ""}}}, 
 	{WWItemSlot::ShieldSlot, {{WWItem::NoItem, ""}, {WWItem::Shield1, "Hero's Shield"}, {WWItem::Shield2, "Mirror Shield"}}},
 	{WWItemSlot::ShieldIconSlot, {{0x00, ""}, {0x01, ""}, {0x02, ""}}},
 	{WWItemSlot::BraceletSlot, {{WWItem::NoItem, ""}, {WWItem::Bracelet, "Power Bracelet"}}},
