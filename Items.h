@@ -120,6 +120,8 @@ typedef enum
 
 	BowMaxAmmo		=	0x003C4C77,
 	BombsMaxAmmo	=	0x003C4C78,
+	BowProgressionMask = 0x003C4C65, // Randomizer needs this to correctly give the next item
+	BombProgressionMask = 0x003C4C72, // These also tell the game to drop ammo for these items
 
 	SongsSlot		=	0x003C4CC5,
 	TriforceSlot	=	0x003C4CC6,
