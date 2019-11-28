@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
-			swapFlags = GetFlagsFromProcess();
 
 			if (InvChanged(localUserInv, swapInv))
 			{
@@ -113,10 +112,6 @@ int main(int argc, char *argv[])
 				localUserInv = swapInv;
 			}
 
-			if (WWFlagsChanged(localUserFlags, swapFlags) > 0)
-			{
-				PatchFlags(localUserFlags, swapFlags);
-			}
 			Sleep(WW_INTERVAL);
 		}
 
@@ -219,13 +214,11 @@ int main(int argc, char *argv[])
 				case WW_COMMAND_POLL:
 				{
 					localUserInv = GetInventoryFromProcess();
-					localUserFlags = GetFlagsFromProcess();
 
 					// Lazy serialization
 					SetBufferCommand(sendBuffer, WW_RESPONSE_POLL);
 					memcpy(&sendBuffer[2], &localUserInv, sizeof(WWInventory));
-					memcpy(&sendBuffer[2 + sizeof(WWInventory)], &localUserFlags, sizeof(WWFlags));
-					send(client, sendBuffer, 2 + sizeof(WWInventory) + sizeof(WWFlags), 0);
+					send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
 					LogVerbose("Inventory sent to server");
 					break;
 				}
@@ -233,20 +226,11 @@ int main(int argc, char *argv[])
 				{
 					// Lazy deserialization
 					memcpy(&rxPatch, &buffer[2], sizeof(WWInventory));
-					memcpy(&rxFlags, &buffer[2 + sizeof(WWInventory)], sizeof(WWFlags));
 
 					LogVerbose("Inventory items received from server");
 
 					PrintInventory(rxPatch);
 					StoreInventoryToProcess(rxPatch);
-
-					localUserFlags = GetFlagsFromProcess();
-
-					if (WWFlagsChanged(localUserFlags, rxFlags) > 0)
-					{
-						PatchFlags(localUserFlags, rxFlags);
-						StoreFlagsToProcess(localUserFlags);
-					}
 
 					break;
 				}
@@ -285,7 +269,6 @@ int main(int argc, char *argv[])
 		std::cout << playerName << " started a game!" << std::endl << std::endl;
 
 		localUserInv = GetInventoryFromProcess();
-		localUserFlags = GetFlagsFromProcess();
 		PrintInventory(localUserInv);
 		
 		while (running)
@@ -296,15 +279,6 @@ int main(int argc, char *argv[])
 				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
 				localUserInv = swapInv;
-			}
-			
-			swapFlags = GetFlagsFromProcess();
-			int numFlagsChanged = WWFlagsChanged(localUserFlags, swapFlags);
-			
-			if (numFlagsChanged > 0)
-			{
-				std::cout << numFlagsChanged << " flags changed." << std::endl;
-				localUserFlags = swapFlags;
 			}
 
 			Sleep(WW_INTERVAL);
@@ -353,7 +327,7 @@ UINT NewClientThread(LPVOID newClient)
 		bytesRead = recv(client, buffer, sizeof(buffer), 0);
 		LogVerbose(" bytes received from client", bytesRead);
 
-		if (bytesRead >= (2 + sizeof(WWInventory) + sizeof(WWFlags)))
+		if (bytesRead >= (2 + sizeof(WWInventory)))
 		{
 			short response = 0;
 			response = GetBufferCommand(buffer);
@@ -362,9 +336,7 @@ UINT NewClientThread(LPVOID newClient)
 			{
 				// Lazy deserialization
 				WWInventory clientInv;
-				WWFlags clientFlags;
 				memcpy(&clientInv, &buffer[2], sizeof(WWInventory));
-				memcpy(&clientFlags, &buffer[2 + sizeof(WWInventory)], sizeof(WWFlags));
 
 				if (InvChanged(localUserInv, clientInv))
 				{
@@ -383,25 +355,11 @@ UINT NewClientThread(LPVOID newClient)
 
 				// Generate a patch for this client
 				patchInv = MakePatch(clientInv, localUserInv);
-
-				localUserFlags = GetFlagsFromProcess();
-
-				// Update server flags
-				if (WWFlagsChanged(localUserFlags, clientFlags))
-				{
-					PatchFlags(localUserFlags, clientFlags);
-					StoreFlagsToProcess(localUserFlags);
-				}
-
-				// Update client flags
-				PatchFlags(clientFlags, localUserFlags);
-
 				SetBufferCommand(sendBuffer, WW_COMMAND_SET);
 
 				// Lazy serialization
 				memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-				memcpy(&sendBuffer[2 + sizeof(WWInventory)], &clientFlags, sizeof(WWFlags));
-				bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory) + sizeof(WWFlags), 0);
+				bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
 
 				LogVerbose(" bytes sent to client", bytesSent);
 			}

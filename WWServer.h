@@ -8,9 +8,11 @@
 #define WW_COMMAND_POLL 0x0609
 #define WW_COMMAND_SET	0x060A
 #define WW_COMMAND_NAME 0x060B
+#define WW_COMMAND_FLAG_SET 0x060C
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_NAME 0x090B
+#define WW_RESPONSE_FLAG 0x090C
 
 bool verbose = false;
 
