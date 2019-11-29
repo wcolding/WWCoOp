@@ -339,3 +339,55 @@ void PatchFlags(WWFlags oldFlags, WWFlags newFlags) // May not even use this
 		memcpy(&oldFlags, &oldBuffer, sizeof(WWFlags));
 	}
 }
+
+vector<WorldGroup> worldGroups
+{
+	{ 0x003C4FF6, {"M_NewD2", "M_Dra09", "M_DragB"} }, // Dragon Roost Cavern
+	{ 0x003C501A, {"kindan", "kinMB", "kinBOSS"} },    // Forbidden Woods
+	{ 0x003C503E, {"Siren", "SirenMB", "SirenB"} },    // Tower of the Gods
+	{ 0x003C5062, {"M_Dai", "M_DaiMB", "M_DaiB"} },    // Earth Temple
+	{ 0x003C5086, {"kaze", "kazeMB", "kazeB"} }        // Wind Temple
+};
+
+int GetWorldGroup(string stage)
+{
+	for (int i = 0; i < worldGroups.size(); i++)
+	{
+		for (int s = 0; s < worldGroups[i].stageNames.size(); s++)
+		{
+			if (stage == worldGroups[i].stageNames[s])
+				return i;
+		}
+	}
+	return -1;
+}
+
+unsigned int GetFlagsPermanentAddress(string stage)
+{
+	int i = GetWorldGroup(stage);
+	if (i < 0)
+		return 0;
+	return worldGroups[i].permAddress;
+}
+
+struct LocalContext
+{
+	__int8 flags[18];
+	string stageName;
+	int sceneCounter;
+
+	LocalContext()
+	{
+		memset(&flags, 0, sizeof(flags));
+		stageName = "";
+		sceneCounter = 0;
+	}
+
+	void Update()
+	{
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags, sizeof(flags), nullptr);
+		stageName = GetCurrentStage();
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &sceneCounter, 4, nullptr);
+
+	}
+};

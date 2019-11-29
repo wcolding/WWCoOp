@@ -234,6 +234,15 @@ int main(int argc, char *argv[])
 
 					break;
 				}
+				case WW_COMMAND_SET_FLAG:
+				{
+					WorldFlag receivedFlag;
+					memcpy(&receivedFlag.address, &buffer[2], 4);
+					memcpy(&receivedFlag.flag, &buffer[6], 1);
+
+					SetFlag(receivedFlag);
+					break;
+				}
 				default:
 					break;
 				}
