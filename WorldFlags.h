@@ -388,6 +388,5 @@ struct LocalContext
 		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &flags, sizeof(flags), nullptr);
 		stageName = GetCurrentStage();
 		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &sceneCounter, 4, nullptr);
-
 	}
 };

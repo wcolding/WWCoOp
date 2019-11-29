@@ -17,7 +17,9 @@ vector<WWItemInfo> InventoryMap =
 	{INV_OFFSET + 10, {{WWItem::NoItem, ""}, {WWItem::MagicArmor, "Magic Armor"}}},
 	{INV_OFFSET + 11, {{WWItem::NoItem, ""}, {WWItem::BaitBag, "Bait Bag"}}},
 	{INV_OFFSET + 12, {{WWItem::NoItem, ""}, {WWItem::Bow1, "Bow"}, {WWItem::Bow2, "Bow (Fire & Ice Arrows)"}, {WWItem::Bow3, "Bow (Light Arrows)"}}},
+	{WWItemSlot::BowProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
 	{INV_OFFSET + 13, {{WWItem::NoItem, ""}, {WWItem::Bombs, "Bombs"}}},
+	{WWItemSlot::BombProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
 
 	// We won't sync bottle contents to start
 	{INV_OFFSET + 14, {{WWItem::NoItem, ""}, {WWItem::Bottle, "Bottle 1 (empty)"}}},
@@ -38,9 +40,7 @@ vector<WWItemInfo> InventoryMap =
 	// Swords, shields and bracelet must have their icon address written to in addition to the item
 	{WWItemSlot::SwordSlot, {{WWItem::NoItem, ""}, {WWItem::Sword1, "Hero's Sword"}, {WWItem::Sword2, "Master Sword"}, {WWItem::Sword3, "Master Sword (Half-Charged)"}, {WWItem::Sword4, "Master Sword (Fully-Charged)"}}},
 	// Randomizer uses this icon slot value to set progressive swords
-	// It doesn't currently account for setting a value when you have full master sword
-	// So we'll cap it at half-power master sword so as to not reset to hero's sword
-	{WWItemSlot::SwordIconSlot, {{0, ""}, {1, ""}, {3, ""}, {7, ""}, {7, ""}}}, 
+	{WWItemSlot::SwordIconSlot, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}, {0x0F, ""}}}, 
 	{WWItemSlot::ShieldSlot, {{WWItem::NoItem, ""}, {WWItem::Shield1, "Hero's Shield"}, {WWItem::Shield2, "Mirror Shield"}}},
 	{WWItemSlot::ShieldIconSlot, {{0x00, ""}, {0x01, ""}, {0x02, ""}}},
 	{WWItemSlot::BraceletSlot, {{WWItem::NoItem, ""}, {WWItem::Bracelet, "Power Bracelet"}}},
@@ -54,7 +54,7 @@ vector<WWItemInfo> InventoryMap =
 
 struct WWInventory
 {
-	__int8 itemStates[33];
+	__int8 itemStates[35];
 	__int8 Songs;
 	__int8 Triforce;
 	__int8 Pearls;
@@ -173,6 +173,7 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		break;
 	case 0x02:
 		builder.push_back("Wallet (5000)");
+		break;
 	default:
 		break;
 	}
@@ -186,6 +187,7 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		break;
 	case 0x20:
 		builder.push_back("Double Magic");
+		break;
 	default:
 		break;
 	}
@@ -199,6 +201,7 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		break;
 	case 99:
 		builder.push_back("Quiver (99)");
+		break;
 	default:
 		break;
 	}
@@ -212,6 +215,7 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		break;
 	case 99:
 		builder.push_back("Bomb Bag (99)");
+		break;
 	default:
 		break;
 	}
@@ -380,8 +384,10 @@ vector<string> GetInventoryStrings(WWInventory inv)
 
 	int heartContainers = inv.Hearts / 4;
 	for (int i = 0; i < heartContainers; i++)
+	{
 		builder.push_back("Heart Container");
-		
+	}
+
 	return builder;
 }
 
