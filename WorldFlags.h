@@ -389,4 +389,15 @@ struct LocalContext
 		stageName = GetCurrentStage();
 		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &sceneCounter, 4, nullptr);
 	}
+
+	char* Serialize()
+	{
+		char buffer[32];
+		memset(&buffer, 0, sizeof(buffer));
+		memcpy(&buffer, &flags, sizeof(flags));
+		memcpy(&buffer[sizeof(flags)], stageName.c_str(), 9); // limit to 10 characters, last being null
+		memcpy(&buffer[sizeof(flags) + 10], &sceneCounter, sizeof(sceneCounter));
+		return buffer;
+	}
 };
+

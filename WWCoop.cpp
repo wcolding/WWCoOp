@@ -280,6 +280,12 @@ int main(int argc, char *argv[])
 		localUserInv = GetInventoryFromProcess();
 		PrintInventory(localUserInv);
 		
+		LocalContext localFlags;
+		localFlags.Update();
+		string oldStageName = localFlags.stageName;
+
+		std::cout << "Stage: " << oldStageName << std::endl;
+
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
@@ -288,6 +294,13 @@ int main(int argc, char *argv[])
 				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
 				localUserInv = swapInv;
+			}
+
+			localFlags.Update();
+			if (localFlags.stageName != oldStageName)
+			{
+				oldStageName = localFlags.stageName;
+				std::cout << "Stage: " << oldStageName << std::endl;
 			}
 
 			Sleep(WW_INTERVAL);
