@@ -17,9 +17,7 @@ vector<WWItemInfo> InventoryMap =
 	{INV_OFFSET + 10, {{WWItem::NoItem, ""}, {WWItem::MagicArmor, "Magic Armor"}}},
 	{INV_OFFSET + 11, {{WWItem::NoItem, ""}, {WWItem::BaitBag, "Bait Bag"}}},
 	{INV_OFFSET + 12, {{WWItem::NoItem, ""}, {WWItem::Bow1, "Bow"}, {WWItem::Bow2, "Bow (Fire & Ice Arrows)"}, {WWItem::Bow3, "Bow (Light Arrows)"}}},
-	{WWItemSlot::BowProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
 	{INV_OFFSET + 13, {{WWItem::NoItem, ""}, {WWItem::Bombs, "Bombs"}}},
-	{WWItemSlot::BombProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
 
 	// We won't sync bottle contents to start
 	{INV_OFFSET + 14, {{WWItem::NoItem, ""}, {WWItem::Bottle, "Bottle 1 (empty)"}}},
@@ -45,6 +43,10 @@ vector<WWItemInfo> InventoryMap =
 	{WWItemSlot::ShieldIconSlot, {{0x00, ""}, {0x01, ""}, {0x02, ""}}},
 	{WWItemSlot::BraceletSlot, {{WWItem::NoItem, ""}, {WWItem::Bracelet, "Power Bracelet"}}},
 	{WWItemSlot::BraceletIconSlot, {{0x00, ""}, {0x01, ""}}},
+
+	// Randomizer uses these values to set progressive upgrades
+	{WWItemSlot::BowProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
+	{WWItemSlot::BombProgressionMask, {{0x00, ""}, {0x01, ""}, {0x03, ""}, {0x07, ""}}},
 
 	// We won't sync the equip state of hero's charm but we'll note it
 	{WWItemSlot::HerosCharmSlot, {{0x00, ""}, {0x01, "Hero's Charm"}, {0x03, "Hero's Charm (equipped)"}}}
