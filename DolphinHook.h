@@ -100,17 +100,27 @@ void StoreInventoryToProcess(WWInventory patch)
 		// Only write changed values
 		if (patch.itemStates[i] != 0)
 		{
-			WriteMappedState(i, patch.itemStates[i]);
-
-
-			if (patch.itemStates[i] > 1)
+			// Don't overwrite acquired bottles with blanks
+			if (13 < i < 18)
 			{
-				for (c = 0; c < 3; c++)
+				__int8 bottleValue = 0xFF;
+				ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + InventoryMap[i].address), &bottleValue, 1, nullptr);
+				if (bottleValue == WWItem::NoItem)
+					WriteMappedState(i, patch.itemStates[i]);
+			}
+			else
+			{
+				WriteMappedState(i, patch.itemStates[i]);
+
+				if (patch.itemStates[i] > 1)
 				{
-					// Update equip buttons if this is an upgrade of an equipped item
-					if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item) // only works if progression is 1 state higher. normal arrows -> light arrows does not trigger
+					for (c = 0; c < 3; c++)
 					{
-						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
+						// Update equip buttons if this is an upgrade of an equipped item
+						if (equipBuffer[c] == InventoryMap[i].states[patch.itemStates[i] - 1].item) // only works if progression is 1 state higher. normal arrows -> light arrows does not trigger
+						{
+							WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON + c), &InventoryMap[i].states[patch.itemStates[i]].item, 1, nullptr);
+						}
 					}
 				}
 			}
