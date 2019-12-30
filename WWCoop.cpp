@@ -2,10 +2,12 @@
 #include "DolphinHook.h"
 #include "WWServer.h"
 #include "WorldFlags.h"
+#include "GiveItemMacros.h"
 
 void ShowUsage();
 UINT ListenThread(LPVOID listener);
 UINT NewClientThread(LPVOID newClient);
+UINT TestModeCommandsThread(LPVOID p);
 
 bool running = true;
 
@@ -23,9 +25,6 @@ int main(int argc, char *argv[])
 	memset(&hints, 0, sizeof(hints));
 	WSADATA wsa;
 	int iResult;
-	u_long blockingFlags = 1;
-	timeval timeout;
-	timeout.tv_sec = 1;
 
 	char buffer[WWINV_BUFFER_LENGTH];
 	char sendBuffer[WWINV_BUFFER_LENGTH]; 
@@ -234,7 +233,7 @@ int main(int argc, char *argv[])
 
 					break;
 				}
-				case WW_COMMAND_SET_FLAG:
+				/*case WW_COMMAND_SET_FLAG:
 				{
 					WorldFlag receivedFlag;
 					memcpy(&receivedFlag.address, &buffer[2], 4);
@@ -242,7 +241,7 @@ int main(int argc, char *argv[])
 
 					SetFlag(receivedFlag);
 					break;
-				}
+				}*/
 				default:
 					break;
 				}
@@ -285,6 +284,8 @@ int main(int argc, char *argv[])
 		string oldStageName = localFlags.stageName;
 
 		std::cout << "Stage: " << oldStageName << std::endl;
+
+		AfxBeginThread(TestModeCommandsThread, nullptr);
 
 		while (running)
 		{
@@ -410,5 +411,25 @@ UINT ListenThread(LPVOID listenerSocket)
 	}
 
 	closesocket(listener);
+	return 0;
+}
+
+UINT TestModeCommandsThread(LPVOID p)
+{
+	while (running)
+	{
+		if ((GetKeyState('H') & 0x8000) > 0)
+			GiveHookshot();
+
+		if ((GetKeyState('1') & 0x8000) > 0)
+			SetSword(1);
+		if ((GetKeyState('2') & 0x8000) > 0)
+			SetSword(2);
+		if ((GetKeyState('3') & 0x8000) > 0)
+			SetSword(3);
+		if ((GetKeyState('4') & 0x8000) > 0)
+			SetSword(4);
+	}
+
 	return 0;
 }

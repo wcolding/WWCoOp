@@ -5,6 +5,32 @@
 
 HANDLE DolphinHandle = NULL;
 
+void DolphinWrite8(unsigned int offset, __int8 value)
+{
+	if (DolphinHandle == NULL)
+		return;
+
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 1, nullptr);
+}
+
+void DolphinWrite16(unsigned int offset, __int16 value)
+{
+	if (DolphinHandle == NULL)
+		return;
+
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 2, nullptr);
+}
+
+__int8 DolphinRead8(unsigned int offset)
+{
+	if (DolphinHandle == NULL)
+		return 0;
+
+	__int8 value;
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 1, nullptr);
+	return value;
+}
+
 WWInventory GetInventoryFromProcess()
 {
 	WWInventory temp;
