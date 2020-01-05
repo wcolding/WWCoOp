@@ -70,6 +70,7 @@ struct WWInventory
 	__int8 XButtonEquip;
 	__int8 YButtonEquip;
 	__int8 ZButtonEquip;
+	int checksum;
 	
 	WWInventory()
 	{
@@ -84,6 +85,44 @@ struct WWInventory
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
+		checksum = 0;
+	}
+
+	void CalculateChecksum()
+	{
+		char checksumBuffer[4];
+		memset(&checksumBuffer, 0, sizeof(checksumBuffer));
+		
+		// First byte
+		// XOR all items as defined by itemStates and InventoryMap
+		for (int i = 0; i < sizeof(itemStates); i++)
+		{
+			checksumBuffer[0] ^= InventoryMap[i].states[itemStates[i]].item;
+		}
+
+		// Second byte
+		// XOR bitmasked values, with songs inverted
+		checksumBuffer[1] ^= (0xFF - Songs);
+		checksumBuffer[1] ^= Triforce;
+		checksumBuffer[1] ^= Pearls;
+
+		// Third byte
+		// XOR chart masks A and B, then XOR each byte down to an 8 bit value
+		unsigned int chartMaskC = Charts.a ^ Charts.b;
+		char chartsBuffer[4];
+		memcpy(&chartsBuffer, &chartMaskC, 4);
+		for (int i = 0; i < 4; i++)
+			checksumBuffer[2] ^= chartsBuffer[i];
+
+		// Fourth byte
+		// Add the other values together, then XOR the buttons
+		int sum = Wallet + Magic + Quiver + BombBag + Hearts + PiecesofHeart;
+		sum ^= XButtonEquip;
+		sum ^= YButtonEquip;
+		sum ^= ZButtonEquip;
+		checksumBuffer[3] = sum >> 24;
+
+		memcpy(&checksum, &checksumBuffer, 4);
 	}
 
 	void UpdateInventoryFromPatch(WWInventory patch)
