@@ -270,14 +270,17 @@ int main(int argc, char *argv[])
 
 		while (GetCurrentStage() == "sea_T" || GetCurrentStage() == "Name")
 		{
-			
+			// Wait for a game to be started
 		}
 
-		string playerName = GetPlayerName();
-		std::cout << playerName << " started a game!" << std::endl << std::endl;
+		Player localPlayer;
+		localPlayer.name = "Test Player";
 
-		localUserInv = GetInventoryFromProcess();
-		PrintInventory(localUserInv);
+		//string playerName = GetPlayerName();
+		std::cout << localPlayer.name << " started a game!" << std::endl << std::endl;
+
+		localPlayer.inventory = GetInventoryFromProcess();
+		PrintInventory(localPlayer.inventory);
 		
 		LocalContext localFlags;
 		localFlags.Update();
@@ -285,22 +288,22 @@ int main(int argc, char *argv[])
 
 		std::cout << "Stage: " << oldStageName << std::endl;
 
-		AfxBeginThread(TestModeCommandsThread, nullptr);
+		AfxBeginThread(TestModeCommandsThread, &localPlayer);
 
-		int newChecksum = 0;
+		
 
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
-			if (InvChanged(localUserInv, swapInv))
+			if (InvChanged(localPlayer.inventory, swapInv))
 			{
-				patchInv = MakePatch(localUserInv, swapInv);
+				patchInv = MakePatch(localPlayer.inventory, swapInv);
 				PrintInventory(patchInv);
-				localUserInv = swapInv;
+				localPlayer.inventory = swapInv;
 
-				newChecksum = CalculateChecksum(localUserInv);
+				localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
 				
-				std::cout << "Checksum: " << newChecksum << std::endl;
+				std::cout << "Checksum: " << localPlayer.checksumA << std::endl;
 			}
 
 			localFlags.Update();
@@ -422,10 +425,22 @@ UINT ListenThread(LPVOID listenerSocket)
 
 UINT TestModeCommandsThread(LPVOID p)
 {
+	Player *thisPlayer = (Player*)p;
+	bool checksumKeydown = false;
 	while (running)
 	{
-		if ((GetKeyState('H') & 0x8000) > 0)
-			GiveHookshot();
+
+
+		if (((GetKeyState('C') & 0x8000) > 0) && (!checksumKeydown))
+		{
+			checksumKeydown = true;
+			thisPlayer->checksumA = CalculateChecksum(thisPlayer->inventory);
+			std::cout << "Checksum: " << thisPlayer->checksumA << std::endl;
+		}
+		else
+		{
+			checksumKeydown = false;
+		}
 
 		if ((GetKeyState('1') & 0x8000) > 0)
 			SetSword(1);
@@ -436,6 +451,6 @@ UINT TestModeCommandsThread(LPVOID p)
 		if ((GetKeyState('4') & 0x8000) > 0)
 			SetSword(4);
 	}
-
+	
 	return 0;
 }

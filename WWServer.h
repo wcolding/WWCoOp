@@ -20,12 +20,11 @@ bool verbose = false;
 
 struct Player
 {
-	char name[16];
 	int checksumA;
 	int checksumB;
 	WWInventory inventory;
 	WWFlags flags;
-
+	string name;
 };
 
 // Clears the given buffer and writes a command to the header
@@ -94,12 +93,14 @@ int CalculateChecksum(WWInventory inv)
 		checksum[2] ^= chartsBuffer[i];
 
 	// Fourth byte
-	// Add the other values together, then XOR the buttons
+	// Add the other values together, dump the sum into an array, XOR the array
 	int sum = inv.Wallet + inv.Magic + inv.Quiver + inv.BombBag + inv.Hearts + inv.PiecesofHeart;
-	sum ^= inv.XButtonEquip;
-	sum ^= inv.YButtonEquip;
-	sum ^= inv.ZButtonEquip;
-	checksum[3] = sum >> 24;
+	char sumBuffer[4];
+	memcpy(&sumBuffer, &sum, sizeof(sum));
+	checksum[3] = sumBuffer[0];
+	checksum[3] ^= sumBuffer[1];
+	checksum[3] ^= sumBuffer[2];
+	checksum[3] ^= sumBuffer[3];
 
 	int c = 0;
 	memcpy(&c, &checksum, 4);
