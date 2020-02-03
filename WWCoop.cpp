@@ -287,6 +287,8 @@ int main(int argc, char *argv[])
 
 		AfxBeginThread(TestModeCommandsThread, nullptr);
 
+		int newChecksum = 0;
+
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
@@ -295,6 +297,10 @@ int main(int argc, char *argv[])
 				patchInv = MakePatch(localUserInv, swapInv);
 				PrintInventory(patchInv);
 				localUserInv = swapInv;
+
+				newChecksum = CalculateChecksum(localUserInv);
+				
+				std::cout << "Checksum: " << newChecksum << std::endl;
 			}
 
 			localFlags.Update();
