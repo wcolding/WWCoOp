@@ -1,6 +1,7 @@
 #pragma once
 #include "WWCore.h"
 #include "Inventory.h"
+#include "WorldFlags.h"
 
 #define WWINV_BUFFER_LENGTH 256
 #define WW_DEFAULT_PORT "2821"
@@ -23,7 +24,7 @@ struct Player
 	int checksumA;
 	int checksumB;
 	WWInventory inventory;
-	// Flags here
+	WWFlags flags;
 
 };
 
@@ -103,4 +104,26 @@ int CalculateChecksum(WWInventory inv)
 	int c = 0;
 	memcpy(&c, &checksum, 4);
 	return c;
+}
+
+int CalculateChecksum(WWFlags flags)
+{
+	int checksum = 0;
+	char* serialized = (char*)malloc(sizeof(flags));
+	memcpy(&serialized, &flags, sizeof(flags));
+
+	for (int i = 0; i < sizeof(serialized); i++)
+	{
+		if (i % 2 == 0)
+		{
+			checksum += serialized[i];
+		}
+		else
+		{
+			checksum ^= serialized[i];
+		}
+	}
+	free(serialized);
+
+	return checksum;
 }
