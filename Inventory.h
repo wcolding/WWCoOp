@@ -60,6 +60,7 @@ struct WWInventory
 	__int8 Songs;
 	__int8 Triforce;
 	__int8 Pearls;
+	__int8 Statues;
 	WWChartState Charts;
 	__int8 Wallet;
 	__int8 Magic;
@@ -70,7 +71,6 @@ struct WWInventory
 	__int8 XButtonEquip;
 	__int8 YButtonEquip;
 	__int8 ZButtonEquip;
-	int checksum;
 	
 	WWInventory()
 	{
@@ -78,6 +78,7 @@ struct WWInventory
 		Songs = 0;
 		Triforce = 0;
 		Pearls = 0;
+		Statues = 0;
 		Wallet = 0;
 		Magic = 0;
 		Quiver = 30;
@@ -85,45 +86,44 @@ struct WWInventory
 		Hearts = 0;
 		PiecesofHeart = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
-		checksum = 0;
 	}
 
-	void CalculateChecksum()
-	{
-		char checksumBuffer[4];
-		memset(&checksumBuffer, 0, sizeof(checksumBuffer));
-		
-		// First byte
-		// XOR all items as defined by itemStates and InventoryMap
-		for (int i = 0; i < sizeof(itemStates); i++)
-		{
-			checksumBuffer[0] ^= InventoryMap[i].states[itemStates[i]].item;
-		}
+	//void CalculateChecksum()
+	//{
+	//	char checksumBuffer[4];
+	//	memset(&checksumBuffer, 0, sizeof(checksumBuffer));
+	//	
+	//	// First byte
+	//	// XOR all items as defined by itemStates and InventoryMap
+	//	for (int i = 0; i < sizeof(itemStates); i++)
+	//	{
+	//		checksumBuffer[0] ^= InventoryMap[i].states[itemStates[i]].item;
+	//	}
 
-		// Second byte
-		// XOR bitmasked values, with songs inverted
-		checksumBuffer[1] ^= (0xFF - Songs);
-		checksumBuffer[1] ^= Triforce;
-		checksumBuffer[1] ^= Pearls;
+	//	// Second byte
+	//	// XOR bitmasked values, with songs inverted
+	//	checksumBuffer[1] ^= (0xFF - Songs);
+	//	checksumBuffer[1] ^= Triforce;
+	//	checksumBuffer[1] ^= Pearls;
 
-		// Third byte
-		// XOR chart masks A and B, then XOR each byte down to an 8 bit value
-		unsigned int chartMaskC = Charts.a ^ Charts.b;
-		char chartsBuffer[4];
-		memcpy(&chartsBuffer, &chartMaskC, 4);
-		for (int i = 0; i < 4; i++)
-			checksumBuffer[2] ^= chartsBuffer[i];
+	//	// Third byte
+	//	// XOR chart masks A and B, then XOR each byte down to an 8 bit value
+	//	unsigned int chartMaskC = Charts.a ^ Charts.b;
+	//	char chartsBuffer[4];
+	//	memcpy(&chartsBuffer, &chartMaskC, 4);
+	//	for (int i = 0; i < 4; i++)
+	//		checksumBuffer[2] ^= chartsBuffer[i];
 
-		// Fourth byte
-		// Add the other values together, then XOR the buttons
-		int sum = Wallet + Magic + Quiver + BombBag + Hearts + PiecesofHeart;
-		sum ^= XButtonEquip;
-		sum ^= YButtonEquip;
-		sum ^= ZButtonEquip;
-		checksumBuffer[3] = sum >> 24;
+	//	// Fourth byte
+	//	// Add the other values together, then XOR the buttons
+	//	int sum = Wallet + Magic + Quiver + BombBag + Hearts + PiecesofHeart;
+	//	sum ^= XButtonEquip;
+	//	sum ^= YButtonEquip;
+	//	sum ^= ZButtonEquip;
+	//	checksumBuffer[3] = sum >> 24;
 
-		memcpy(&checksum, &checksumBuffer, 4);
-	}
+	//	memcpy(&checksum, &checksumBuffer, 4);
+	//}
 
 	void UpdateInventoryFromPatch(WWInventory patch)
 	{
@@ -139,6 +139,7 @@ struct WWInventory
 		Songs		= Songs | patch.Songs;
 		Triforce	= Triforce | patch.Triforce;
 		Pearls		= Pearls | patch.Pearls;
+		Statues = Statues | patch.Statues;
 		Charts.SetState(Charts.GetState() | patch.Charts.GetState());
 
 		Wallet = patch.Wallet;
@@ -190,6 +191,7 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 	patch.Songs = oldInv.Songs ^ newInv.Songs;
 	patch.Pearls = oldInv.Pearls ^ newInv.Pearls;
 	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
+	patch.Statues = oldInv.Statues ^ newInv.Statues;
 	patch.Charts.SetState(oldInv.Charts.GetState() ^ newInv.Charts.GetState());
 
 	return patch;
@@ -297,6 +299,17 @@ vector<string> GetInventoryStrings(WWInventory inv)
 		builder.push_back("Din's Pearl");
 	if ((inv.Pearls & WWPearlMask::Farore) != 0)
 		builder.push_back("Farore's Pearl");
+
+	if ((inv.Statues & WWStatueMask::i_DragonTingleStatue) != 0)
+		builder.push_back("Dragon Tingle Statue");
+	if ((inv.Statues & WWStatueMask::i_ForbiddenTingleStatue) != 0)
+		builder.push_back("Forbidden Tingle Statue");
+	if ((inv.Statues & WWStatueMask::i_GoddessTingleStatue) != 0)
+		builder.push_back("Goddess Tingle Statue");
+	if ((inv.Statues & WWStatueMask::i_EarthTingleStatue) != 0)
+		builder.push_back("Earth Tingle Statue");
+	if ((inv.Statues & WWStatueMask::i_WindTingleStatue) != 0)
+		builder.push_back("Wind Tingle Statue");
 	
 	if (inv.Charts.HasChart(TreasureChart1) != 0)
 		builder.push_back("Treasure Chart 1");
@@ -465,6 +478,8 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 	if (oldInv.Triforce != newInv.Triforce)
 		return true;
 	if (oldInv.Pearls != newInv.Pearls)
+		return true;
+	if (oldInv.Statues != newInv.Statues)
 		return true;
 	if (oldInv.Charts.GetState() != newInv.Charts.GetState())
 		return true;

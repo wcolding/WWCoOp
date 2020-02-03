@@ -429,13 +429,14 @@ UINT TestModeCommandsThread(LPVOID p)
 	bool checksumKeydown = false;
 	while (running)
 	{
-
-
-		if (((GetKeyState('C') & 0x8000) > 0) && (!checksumKeydown))
+		if ((GetKeyState('C') & 0x8000) > 0)
 		{
-			checksumKeydown = true;
-			thisPlayer->checksumA = CalculateChecksum(thisPlayer->inventory);
-			std::cout << "Checksum: " << thisPlayer->checksumA << std::endl;
+			if (!checksumKeydown)
+			{
+				checksumKeydown = true;
+				thisPlayer->checksumA = CalculateChecksum(thisPlayer->inventory);
+				std::cout << "Checksum: " << thisPlayer->checksumA << std::endl;
+			}
 		}
 		else
 		{

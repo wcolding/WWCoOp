@@ -83,6 +83,7 @@ int CalculateChecksum(WWInventory inv)
 	checksum[1] ^= (char)(0xFF - inv.Songs);
 	checksum[1] ^= inv.Triforce;
 	checksum[1] ^= inv.Pearls;
+	checksum[1] ^= inv.Statues;
 
 	// Third byte
 	// XOR chart masks A and B, then XOR each byte down to an 8 bit value

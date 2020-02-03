@@ -45,10 +45,12 @@ WWInventory GetInventoryFromProcess()
 	__int8 p2Buffer[WWItemSlot::ChartSlot + 8 - WWItemSlot::HeartContainers];
 	__int8 equipBuffer[3];
 	__int8 mailBuffer[8];
+	__int8 statueBuffer;
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::HeartContainers), &p2Buffer, sizeof(p2Buffer), nullptr);
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::HeartContainers], sizeof(mailBuffer));
+	statueBuffer = DolphinRead8(WWItemSlot::StatuesSlot);
 
 	int i;
 	int c;
@@ -86,6 +88,7 @@ WWInventory GetInventoryFromProcess()
 	temp.Songs = p2Buffer[WWItemSlot::SongsSlot - WWItemSlot::HeartContainers];
 	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::HeartContainers];
 	temp.Pearls = p2Buffer[WWItemSlot::PearlSlot - WWItemSlot::HeartContainers];
+	temp.Statues = statueBuffer;
 	
 	char chartBuffer[8];
 	memcpy(&chartBuffer, &p2Buffer[WWItemSlot::ChartSlot - WWItemSlot::HeartContainers], sizeof(chartBuffer));
@@ -198,6 +201,10 @@ void StoreInventoryToProcess(WWInventory patch)
 	bitMaskBuffer[1] = bitMaskBuffer[1] | patch.Triforce;
 	bitMaskBuffer[2] = bitMaskBuffer[2] | patch.Pearls;
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::SongsSlot), &bitMaskBuffer, sizeof(bitMaskBuffer), nullptr);
+	__int8 statueBuffer;
+	statueBuffer = DolphinRead8(WWItemSlot::StatuesSlot);
+	statueBuffer |= patch.Statues;
+	DolphinWrite8(WWItemSlot::StatuesSlot, statueBuffer);
 	
 	// Chart malarky
 	__int8 chartBuffer[8];

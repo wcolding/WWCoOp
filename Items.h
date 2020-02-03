@@ -135,7 +135,9 @@ typedef enum
 	MailBagStart	=	0x003C4C8E,
 
 	HeartContainers =	0x003C4C09,
-	CurrentHearts	=	0x003C4C0B
+	CurrentHearts	=	0x003C4C0B,
+
+	StatuesSlot		=   0x003C5296
 } WWItemSlot;
 
 typedef enum
@@ -150,17 +152,26 @@ typedef enum
 
 typedef enum
 {
+	Nayru  = 0x01,
+	Din    = 0x02,
+	Farore = 0x04
+} WWPearlMask;
+
+typedef enum
+{
+	i_DragonTingleStatue    = 0b00000100, 
+	i_ForbiddenTingleStatue = 0b00001000,
+	i_GoddessTingleStatue   = 0b00010000,
+	i_EarthTingleStatue     = 0b00100000,
+	i_WindTingleStatue      = 0b01000000
+} WWStatueMask;
+
+typedef enum
+{
 	X_BUTTON	=	0x003CA7DB,
 	Y_BUTTON	=	0x003CA7DC,
 	Z_BUTTON	=	0x003CA7DD,
 } WWEquipSlot;
-
-typedef enum
-{
-	Nayru	=	0x01,
-	Din		=	0x02,
-	Farore	=	0x04
-} WWPearlMask;
 
 typedef enum : unsigned int
 {
