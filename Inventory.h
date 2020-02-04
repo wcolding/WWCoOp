@@ -453,6 +453,7 @@ void PrintInventory(WWInventory inv)
 		std::cout << itemsList[i] << std::endl;
 }
 
+// Deprecating this in favor of Player checksum evaluation
 bool InvChanged(WWInventory oldInv, WWInventory newInv)
 {
 	int i;

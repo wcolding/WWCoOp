@@ -196,4 +196,3 @@ void SetShield(int shieldLvl)
 		break;
 	}
 }
-

@@ -8,9 +8,9 @@
 #define WW_INTERVAL 1000
 
 #define WW_COMMAND_POLL 0x0609
-#define WW_COMMAND_SET	0x060A
+#define WW_COMMAND_SET	0x060A   // WW_COMMAND_SET, address, value, length
 #define WW_COMMAND_NAME 0x060B
-#define WW_COMMAND_SET_FLAG 0x060C
+#define WW_COMMAND_SET_CHARTS 0x060C // WW_COMMAND_SET_CHARTS, value
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_NAME 0x090B
@@ -20,8 +20,8 @@ bool verbose = false;
 
 struct Player
 {
-	int checksumA;
-	int checksumB;
+	int checksumA = 0;
+	int checksumB = 0;
 	WWInventory inventory;
 	WWFlags flags;
 	string name;
@@ -33,7 +33,6 @@ void SetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH], short command)
 	memset(&buffer, 0, sizeof(buffer));
 	char commandBuffer[2];
 	memcpy(&commandBuffer, &command, 2);
-	// TO DO: endian test
 	buffer[0] = commandBuffer[1];
 	buffer[1] = commandBuffer[0];
 }
@@ -44,13 +43,25 @@ short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 	char commandBuffer[2];
 	char swapBuffer[2];
 	memcpy(&commandBuffer, &buffer, 2);
-	// TO DO: endian test
 	swapBuffer[0] = commandBuffer[1];
 	swapBuffer[1] = commandBuffer[0];
 
 	short command = 0;
 	memcpy(&command, &swapBuffer, 2);
 	return command;
+}
+
+// Automates the sending of a WW_COMMAND_SET packet to a client
+int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t dataLen )
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_SET);
+	unsigned int address = BASE_OFFSET + _address;
+	memcpy(&buffer[2], &address, 4); // address
+	memcpy(&buffer[6], &data, dataLen); // value
+	memcpy(&buffer[6+dataLen], &dataLen, 4); // size to write
+
+	return send(client, buffer, 6 + dataLen + 4, 0);
 }
 
 // Prints a message if verbose mode is enabled
