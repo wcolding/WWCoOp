@@ -225,6 +225,9 @@ int main(int argc, char *argv[])
 				}
 				case WW_COMMAND_SET:
 				{
+					if (bytesRead < 11)
+						break;
+
 					// Directly set memory as instructed by the server
 					unsigned int address;
 					char* data;
@@ -237,6 +240,9 @@ int main(int argc, char *argv[])
 				}
 				case WW_COMMAND_SET_CHARTS:
 				{
+					if (bytesRead < 10)
+						break;
+
 					// Directly set charts as instructed by the server
 					char chartBuffer[8];
 					memcpy(&chartBuffer, &buffer[2], sizeof(chartBuffer));
@@ -430,6 +436,7 @@ UINT NewClientThread(LPVOID newClient)
 					if (localSumBuffer[2] != remoteSumBuffer[2])
 					{
 						// Charts differ
+						// Only set client if server has something new
 						setClient = (localPlayer.inventory.Charts.GetState() > remotePlayer.inventory.Charts.GetState());
 						__int64 newCharts = localPlayer.inventory.Charts.GetState() ^ remotePlayer.inventory.Charts.GetState();
 						WWChartState newChartState;
@@ -451,6 +458,95 @@ UINT NewClientThread(LPVOID newClient)
 					{
 						// Wallet/Magic/Capacities/Hearts/PoH differ
 
+						if (localPlayer.inventory.Wallet != remotePlayer.inventory.Wallet)
+						{
+							setClient = (localPlayer.inventory.Wallet > remotePlayer.inventory.Wallet);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.Wallet = remotePlayer.inventory.Wallet;
+								DolphinWrite8(WWItemSlot::WalletSlot, localPlayer.inventory.Wallet);
+								// Print to console?
+							}
+							else
+							{
+								// Update remote player
+								ClientSetValue(client, WWItemSlot::WalletSlot, &localPlayer.inventory.Wallet, 1);
+							}
+						}
+
+						if (localPlayer.inventory.Magic != remotePlayer.inventory.Magic)
+						{
+							setClient = (localPlayer.inventory.Magic > remotePlayer.inventory.Magic);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.Magic = remotePlayer.inventory.Magic;
+								DolphinWrite8(WWItemSlot::MagicSlot, localPlayer.inventory.Magic);
+								// Print to console?
+							}
+							else
+							{
+								// Update remote player
+								ClientSetValue(client, WWItemSlot::MagicSlot, &localPlayer.inventory.Magic, 1);
+							}
+						}
+
+						if (localPlayer.inventory.Quiver != remotePlayer.inventory.Quiver)
+						{
+							setClient = (localPlayer.inventory.Quiver > remotePlayer.inventory.Quiver);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.Quiver = remotePlayer.inventory.Quiver;
+								DolphinWrite8(WWItemSlot::BowMaxAmmo, localPlayer.inventory.Quiver);
+								// Print to console?
+							}
+							else
+							{
+								// Update remote player
+								ClientSetValue(client, WWItemSlot::BowMaxAmmo, &localPlayer.inventory.Quiver, 1);
+							}
+						}
+
+						if (localPlayer.inventory.BombBag != remotePlayer.inventory.BombBag)
+						{
+							setClient = (localPlayer.inventory.BombBag > remotePlayer.inventory.BombBag);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.BombBag = remotePlayer.inventory.BombBag;
+								DolphinWrite8(WWItemSlot::BombsMaxAmmo, localPlayer.inventory.BombBag);
+								// Print to console?
+							}
+							else
+							{
+								// Update remote player
+								ClientSetValue(client, WWItemSlot::BombsMaxAmmo, &localPlayer.inventory.BombBag, 1);
+							}
+						}
+
+						if (localPlayer.inventory.Hearts != remotePlayer.inventory.Hearts)
+						{
+							setClient = (localPlayer.inventory.Hearts > remotePlayer.inventory.Hearts);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.Hearts = remotePlayer.inventory.Hearts;
+								DolphinWrite8(WWItemSlot::HeartContainers, localPlayer.inventory.Hearts);
+								// Print to console?
+							}
+							else
+							{
+								// Update remote player
+								ClientSetValue(client, WWItemSlot::HeartContainers, &localPlayer.inventory.Hearts, 1);
+							}
+						}
+
+						if (localPlayer.inventory.PiecesofHeart!= remotePlayer.inventory.PiecesofHeart)
+						{
+							// PoH not supported yet	
+						}
 
 
 					}
