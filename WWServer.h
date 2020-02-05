@@ -64,6 +64,32 @@ int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t data
 	return send(client, buffer, 6 + dataLen + 4, 0);
 }
 
+// Chooses whether to update a local or remote player's itemState at a specified index
+void TestItemStates(SOCKET client, Player localPlayer, Player remotePlayer, int index)
+{
+	if (index >= sizeof(localPlayer.inventory.itemStates))
+		return;
+
+	if (localPlayer.inventory.itemStates[index] != remotePlayer.inventory.itemStates[index])
+	{
+		bool setClient = (localPlayer.inventory.itemStates[index] > remotePlayer.inventory.itemStates[index]);
+		if (!setClient)
+		{
+			// Update local player
+			localPlayer.inventory.itemStates[index] = remotePlayer.inventory.itemStates[index];
+			DolphinWrite8(InventoryMap[index].address, InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item);
+			string itemName = InventoryMap[index].states[localPlayer.inventory.itemStates[index]].name;
+			if (itemName != "")
+				std::cout << itemName << std::endl;
+		}
+		else
+		{
+			// Update remote player
+			ClientSetValue(client, InventoryMap[index].address, &InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item, 1);
+		}
+	}
+}
+
 // Prints a message if verbose mode is enabled
 void LogVerbose(const char* msg)
 {

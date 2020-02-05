@@ -347,8 +347,9 @@ UINT NewClientThread(LPVOID newClient)
 	int bytesRead = 0;
 	int bytesSent = 0;
 	vector<string> itemsList;
-
-	// Get remote player name before loop
+	
+	remotePlayer.name = "Prince Sidon";
+	std::cout << remotePlayer.name << " joined the server" << std::endl;
 
 	while (running)
 	{
@@ -381,19 +382,22 @@ UINT NewClientThread(LPVOID newClient)
 					memcpy(&localSumBuffer, &localPlayer.checksumA, 4);
 					memcpy(&remoteSumBuffer, &remotePlayer.checksumA, 4);
 
+					bool setClient = false;
+
 					if (localSumBuffer[0] != remoteSumBuffer[0])
 					{
 						// itemStates differ
 
-						if (localPlayer.inventory.itemStates[0] != remotePlayer.inventory.itemStates[0])
+						for (int i = 0; i < sizeof(localPlayer.inventory.itemStates); i++)
 						{
-							
+							TestItemStates(client, localPlayer, remotePlayer, i);
 						}
 					}
 
 					if (localSumBuffer[1] != remoteSumBuffer[1])
 					{
 						// Songs/Triforce/Pearls/Statues differ
+						// Always OR different values and set both server and client to the result
 						if (localPlayer.inventory.Songs != remotePlayer.inventory.Songs)
 						{
 							localPlayer.inventory.Songs |= remotePlayer.inventory.Songs;
@@ -426,6 +430,7 @@ UINT NewClientThread(LPVOID newClient)
 					if (localSumBuffer[2] != remoteSumBuffer[2])
 					{
 						// Charts differ
+						setClient = (localPlayer.inventory.Charts.GetState() > remotePlayer.inventory.Charts.GetState());
 						__int64 newCharts = localPlayer.inventory.Charts.GetState() ^ remotePlayer.inventory.Charts.GetState();
 						WWChartState newChartState;
 						newChartState.SetState(newCharts);
@@ -433,15 +438,20 @@ UINT NewClientThread(LPVOID newClient)
 						SetBufferFromChartState(chartBuffer, newChartState);
 						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
 						
-						char setChartsBuffer[WWINV_BUFFER_LENGTH];
-						SetBufferCommand(setChartsBuffer, WW_COMMAND_SET_CHARTS);
-						memcpy(&setChartsBuffer, &chartBuffer, sizeof(chartBuffer));
-						send(client, setChartsBuffer, sizeof(chartBuffer) + 2, 0);
+						if (setClient)
+						{
+							char setChartsBuffer[WWINV_BUFFER_LENGTH];
+							SetBufferCommand(setChartsBuffer, WW_COMMAND_SET_CHARTS);
+							memcpy(&setChartsBuffer[2], &chartBuffer, sizeof(chartBuffer));
+							send(client, setChartsBuffer, sizeof(chartBuffer) + 2, 0);
+						}
 					}
 
 					if (localSumBuffer[3] != remoteSumBuffer[3])
 					{
 						// Wallet/Magic/Capacities/Hearts/PoH differ
+
+
 
 					}
 				}
