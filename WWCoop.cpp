@@ -22,6 +22,15 @@ int main(int argc, char *argv[])
 {
 	std::cout << "Wind Waker Co-op " << VERSION << std::endl << std::endl;
 
+	string enteredName;
+	std::cout << "Enter username (limit 15 chars, no spaces): ";
+	std::cin >> enteredName;
+	std::cout << std::endl;
+
+	localPlayer.SetName(enteredName);
+
+	std::cout << "Hello, " << localPlayer.name << std::endl;
+	
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -215,12 +224,13 @@ int main(int argc, char *argv[])
 				case WW_COMMAND_POLL:
 				{
 					localPlayer.inventory = GetInventoryFromProcess();
+					localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
 
 					// Lazy serialization
 					SetBufferCommand(sendBuffer, WW_RESPONSE_POLL);
-					memcpy(&sendBuffer[2], &localPlayer.inventory, sizeof(WWInventory));
-					send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
-					LogVerbose("Inventory sent to server");
+					memcpy(&sendBuffer[2], &localPlayer, sizeof(localPlayer));
+					send(client, sendBuffer, 2 + sizeof(localPlayer), 0);
+					LogVerbose("Player data sent to server");
 					break;
 				}
 				case WW_COMMAND_SET:
@@ -281,9 +291,8 @@ int main(int argc, char *argv[])
 			// Wait for a game to be started
 		}
 
-		localPlayer.name = "Test Player";
+		localPlayer.SetName("Test Player");
 
-		//string playerName = GetPlayerName();
 		std::cout << localPlayer.name << " started a game!" << std::endl << std::endl;
 
 		localPlayer.inventory = GetInventoryFromProcess();
@@ -350,12 +359,12 @@ UINT NewClientThread(LPVOID newClient)
 	Player remotePlayer;
 	char buffer[WWINV_BUFFER_LENGTH];
 	char sendBuffer[WWINV_BUFFER_LENGTH];
+	memset(&buffer, 0, sizeof(buffer));
+	memset(&sendBuffer, 0, sizeof(sendBuffer));
 	int bytesRead = 0;
 	int bytesSent = 0;
 	vector<string> itemsList;
-	
-	remotePlayer.name = "Prince Sidon";
-	std::cout << remotePlayer.name << " joined the server" << std::endl;
+	bool announcedPlayer = false;
 
 	while (running)
 	{
@@ -370,14 +379,22 @@ UINT NewClientThread(LPVOID newClient)
 		bytesRead = recv(client, buffer, sizeof(buffer), 0);
 		LogVerbose(" bytes received from client", bytesRead);
 
-		if (bytesRead >= (2 + sizeof(WWInventory))) // need to expand this
+		if (bytesRead >= (2 + sizeof(Player)))
 		{
 			short response = 0;
 			response = GetBufferCommand(buffer);
 
 			if (response == WW_RESPONSE_POLL)
 			{
-				// memcpy buffer into remotePlayer here
+				memcpy(&remotePlayer, &buffer[2], sizeof(remotePlayer));
+
+				if (!announcedPlayer)
+					{
+						std::cout << remotePlayer.name << " joined the server" << std::endl;
+						announcedPlayer = true;
+					}
+
+				// Inventory checks
 				if (localPlayer.checksumA != remotePlayer.checksumA)
 				{
 					// Player inventories differ
@@ -393,7 +410,6 @@ UINT NewClientThread(LPVOID newClient)
 					if (localSumBuffer[0] != remoteSumBuffer[0])
 					{
 						// itemStates differ
-
 						for (int i = 0; i < sizeof(localPlayer.inventory.itemStates); i++)
 						{
 							TestItemStates(client, localPlayer, remotePlayer, i);
@@ -443,10 +459,14 @@ UINT NewClientThread(LPVOID newClient)
 						newChartState.SetState(newCharts);
 						char chartBuffer[8];
 						SetBufferFromChartState(chartBuffer, newChartState);
-						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
-						
-						if (setClient)
+						if (!setClient)
 						{
+							// Set server
+							WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+						}
+						else
+						{
+							// Set client
 							char setChartsBuffer[WWINV_BUFFER_LENGTH];
 							SetBufferCommand(setChartsBuffer, WW_COMMAND_SET_CHARTS);
 							memcpy(&setChartsBuffer[2], &chartBuffer, sizeof(chartBuffer));
@@ -552,49 +572,40 @@ UINT NewClientThread(LPVOID newClient)
 					}
 				}
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				// Lazy deserialization
-				WWInventory clientInv;
-				memcpy(&clientInv, &buffer[2], sizeof(WWInventory));
-
-				if (InvChanged(localPlayer.inventory, clientInv))
+				// Flag checks
+				if (localPlayer.checksumB != remotePlayer.checksumB)
 				{
-					// Update server inventory first
-					patchInv = MakePatch(localPlayer.inventory, clientInv);
-
-					LogVerbose("Updating server inventory from client inventory");
-
-					PrintInventory(patchInv);
-
-					swapInv = localPlayer.inventory;
-					swapInv.UpdateInventoryFromPatch(patchInv);
-					StoreInventoryToProcess(patchInv);
-					localPlayer.inventory = swapInv;
+					// World states differ
 				}
+				
+				//// Lazy deserialization
+				//WWInventory clientInv;
+				//memcpy(&clientInv, &buffer[2], sizeof(WWInventory));
 
-				// Generate a patch for this client
-				patchInv = MakePatch(clientInv, localPlayer.inventory);
-				SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+				//if (InvChanged(localPlayer.inventory, clientInv))
+				//{
+				//	// Update server inventory first
+				//	patchInv = MakePatch(localPlayer.inventory, clientInv);
 
-				// Lazy serialization
-				memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-				bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
+				//	LogVerbose("Updating server inventory from client inventory");
 
-				LogVerbose(" bytes sent to client", bytesSent);
+				//	PrintInventory(patchInv);
+
+				//	swapInv = localPlayer.inventory;
+				//	swapInv.UpdateInventoryFromPatch(patchInv);
+				//	StoreInventoryToProcess(patchInv);
+				//	localPlayer.inventory = swapInv;
+				//}
+
+				//// Generate a patch for this client
+				//patchInv = MakePatch(clientInv, localPlayer.inventory);
+				//SetBufferCommand(sendBuffer, WW_COMMAND_SET);
+
+				//// Lazy serialization
+				//memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
+				//bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
+
+				//LogVerbose(" bytes sent to client", bytesSent);
 			}
 		}
 		

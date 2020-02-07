@@ -20,11 +20,17 @@ bool verbose = false;
 
 struct Player
 {
+	char name[16]; // we will limit this to 15 characters plus a null byte
 	int checksumA = 0;
 	int checksumB = 0;
 	WWInventory inventory;
 	WWFlags flags;
-	string name;
+
+	void SetName(string n)
+	{
+		memset(&name, 0, sizeof(name));
+		memcpy(&name, n.c_str(), 15);
+	}
 };
 
 // Clears the given buffer and writes a command to the header
