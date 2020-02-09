@@ -242,12 +242,13 @@ int main(int argc, char *argv[])
 
 					// Directly set memory as instructed by the server
 					unsigned int address;
-					char* data;
+					__int8* data;
 					size_t len;
 					memcpy(&len, &buffer[bytesRead - 4], 4);
 					memcpy(&address, &buffer[2], 4);
 					memcpy(&data, &buffer[6], len);
 					WriteProcessMemory(DolphinHandle, (LPVOID)(address), &data, len, nullptr);
+
 					break;
 				}
 				case WW_COMMAND_SET_CHARTS:
@@ -260,6 +261,24 @@ int main(int argc, char *argv[])
 					memcpy(&chartBuffer, &buffer[2], sizeof(chartBuffer));
 					localPlayer.inventory.Charts = GetChartsFromBuffer(chartBuffer);
 					WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+					break;
+				}
+				case WW_COMMAND_GIVE_ITEM:
+				{
+					if (bytesRead < 3)
+						break;
+
+					WWItem rxItem = (WWItem)buffer[2];
+
+					switch (rxItem)
+					{
+					case WWItem::Hookshot:
+						GiveHookshot();
+						break;
+					default:
+						break;
+					}
+
 					break;
 				}
 				default:
@@ -619,6 +638,7 @@ UINT NewClientThread(LPVOID newClient)
 	}
 DISCONNECT_CLIENT:
 	LogVerbose("No response from client. Terminating thread.");
+	std::cout << remotePlayer.name << " disconnected from the server" << std::endl;
 	closesocket(client);
 	return 0;
 }

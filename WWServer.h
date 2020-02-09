@@ -11,6 +11,7 @@
 #define WW_COMMAND_SET	0x060A   // WW_COMMAND_SET, address, value, length
 #define WW_COMMAND_NAME 0x060B
 #define WW_COMMAND_SET_CHARTS 0x060C // WW_COMMAND_SET_CHARTS, value
+#define WW_COMMAND_GIVE_ITEM 0x060D
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_NAME 0x090B
@@ -58,6 +59,7 @@ short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 }
 
 // Automates the sending of a WW_COMMAND_SET packet to a client
+// this is buggy as hell and probably a bad idea the more I think about it
 int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t dataLen )
 {
 	char buffer[WWINV_BUFFER_LENGTH];
@@ -68,6 +70,14 @@ int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t data
 	memcpy(&buffer[6+dataLen], &dataLen, 4); // size to write
 
 	return send(client, buffer, 6 + dataLen + 4, 0);
+}
+
+int ClientGiveItem(SOCKET client, WWItem item)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_GIVE_ITEM);
+	buffer[2] = item;
+	return send(client, buffer, 3, 0);
 }
 
 // Chooses whether to update a local or remote player's itemState at a specified index
@@ -84,14 +94,12 @@ void TestItemStates(SOCKET client, Player localPlayer, Player remotePlayer, int 
 			// Update local player
 			localPlayer.inventory.itemStates[index] = remotePlayer.inventory.itemStates[index];
 			DolphinWrite8(InventoryMap[index].address, InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item);
-			string itemName = InventoryMap[index].states[localPlayer.inventory.itemStates[index]].name;
-			if (itemName != "")
-				std::cout << itemName << std::endl;
 		}
 		else
 		{
 			// Update remote player
-			ClientSetValue(client, InventoryMap[index].address, &InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item, 1);
+			//ClientSetValue(client, InventoryMap[index].address, &InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item, 1);
+			ClientGiveItem(client, (WWItem)InventoryMap[index].states[localPlayer.inventory.itemStates[index]].item);
 		}
 	}
 }
