@@ -356,10 +356,73 @@ int main(int argc, char *argv[])
 						SetShield(2);
 						break;
 
+					case WWItem::FathersLetter:
+						AddToMail(WWItem::FathersLetter);
+						break;
+					case WWItem::NotetoMom:
+						AddToMail(WWItem::NotetoMom);
+						break;
+					case WWItem::MaggiesLetter:
+						AddToMail(WWItem::MaggiesLetter);
+						break;
+					case WWItem::MoblinsLetter:
+						AddToMail(WWItem::MoblinsLetter);
+						break;
+					case WWItem::CabanaDeed:
+						AddToMail(WWItem::CabanaDeed);
+						break;
+
 					default:
 						break;
 					}
 
+					break;
+				}
+				case WW_COMMAND_SET_SONGS:
+					if (bytesRead < 3)
+						break;
+					SetSongs(buffer[2]);
+					break;
+				case WW_COMMAND_SET_TRIFORCE:
+					if (bytesRead < 3)
+						break;
+					SetTriforce(buffer[2]);
+					break;
+				case WW_COMMAND_SET_PEARLS:
+					if (bytesRead < 3)
+						break;
+					SetPearls(buffer[2]);
+					break;
+				case WW_COMMAND_SET_STATUES:
+					if (bytesRead < 3)
+						break;
+					SetStatues(buffer[2]);
+					break;
+				case WW_COMMAND_UPGRADE:
+				{
+					if (bytesRead < 3)
+						break;
+					WWUpgradeItem item = (WWUpgradeItem)buffer[2];
+					switch (item)
+					{
+					case ug_Wallet:
+						UpgradeWallet();
+						break;
+					case ug_Magic:
+						UpgradeMagic();
+						break;
+					case ug_Quiver:
+						UpgradeQuiver();
+						break;
+					case ug_BombBag:
+						UpgradeBombBag();
+						break;
+					case ug_Hearts:
+						AddHeartContainer();
+						break;
+					default:
+						break;
+					}
 					break;
 				}
 				default:
@@ -529,29 +592,29 @@ UINT NewClientThread(LPVOID newClient)
 						if (localPlayer.inventory.Songs != remotePlayer.inventory.Songs)
 						{
 							localPlayer.inventory.Songs |= remotePlayer.inventory.Songs;
-							DolphinWrite8(WWItemSlot::SongsSlot, localPlayer.inventory.Songs);
-							ClientSetValue(client, WWItemSlot::SongsSlot, &localPlayer.inventory.Songs, 1);
+							SetSongs(localPlayer.inventory.Songs);
+							ClientSetSongs(client, localPlayer.inventory.Songs);
 						}
 
 						if (localPlayer.inventory.Triforce != remotePlayer.inventory.Triforce)
 						{
 							localPlayer.inventory.Triforce |= remotePlayer.inventory.Triforce;
-							DolphinWrite8(WWItemSlot::TriforceSlot, localPlayer.inventory.Triforce);
-							ClientSetValue(client, WWItemSlot::TriforceSlot, &localPlayer.inventory.Triforce, 1);
+							SetTriforce(localPlayer.inventory.Triforce);
+							ClientSetTriforce(client, localPlayer.inventory.Triforce);
 						}
 
 						if (localPlayer.inventory.Pearls != remotePlayer.inventory.Pearls)
 						{
 							localPlayer.inventory.Pearls |= remotePlayer.inventory.Pearls;
-							DolphinWrite8(WWItemSlot::PearlSlot, localPlayer.inventory.Pearls);
-							ClientSetValue(client, WWItemSlot::PearlSlot, &localPlayer.inventory.Pearls, 1);
+							SetPearls(localPlayer.inventory.Pearls);
+							ClientSetPearls(client, localPlayer.inventory.Pearls);
 						}
 
 						if (localPlayer.inventory.Statues != remotePlayer.inventory.Statues)
 						{
 							localPlayer.inventory.Statues |= remotePlayer.inventory.Statues;
-							DolphinWrite8(WWItemSlot::StatuesSlot, localPlayer.inventory.Statues);
-							ClientSetValue(client, WWItemSlot::StatuesSlot, &localPlayer.inventory.Statues, 1);
+							SetStatues(localPlayer.inventory.Statues);
+							ClientSetPearls(client, localPlayer.inventory.Statues);
 						}
 					}
 
@@ -592,12 +655,12 @@ UINT NewClientThread(LPVOID newClient)
 								// Update local player
 								localPlayer.inventory.Wallet = remotePlayer.inventory.Wallet;
 								DolphinWrite8(WWItemSlot::WalletSlot, localPlayer.inventory.Wallet);
-								// Print to console?
 							}
 							else
 							{
 								// Update remote player
-								ClientSetValue(client, WWItemSlot::WalletSlot, &localPlayer.inventory.Wallet, 1);
+								//ClientSetValue(client, WWItemSlot::WalletSlot, &localPlayer.inventory.Wallet, 1);
+								ClientUpgrade(client, WWUpgradeItem::ug_Wallet);
 							}
 						}
 
@@ -609,12 +672,12 @@ UINT NewClientThread(LPVOID newClient)
 								// Update local player
 								localPlayer.inventory.Magic = remotePlayer.inventory.Magic;
 								DolphinWrite8(WWItemSlot::MagicSlot, localPlayer.inventory.Magic);
-								// Print to console?
 							}
 							else
 							{
 								// Update remote player
-								ClientSetValue(client, WWItemSlot::MagicSlot, &localPlayer.inventory.Magic, 1);
+								//ClientSetValue(client, WWItemSlot::MagicSlot, &localPlayer.inventory.Magic, 1);
+								ClientUpgrade(client, WWUpgradeItem::ug_Magic);
 							}
 						}
 
@@ -626,12 +689,12 @@ UINT NewClientThread(LPVOID newClient)
 								// Update local player
 								localPlayer.inventory.Quiver = remotePlayer.inventory.Quiver;
 								DolphinWrite8(WWItemSlot::BowMaxAmmo, localPlayer.inventory.Quiver);
-								// Print to console?
 							}
 							else
 							{
 								// Update remote player
-								ClientSetValue(client, WWItemSlot::BowMaxAmmo, &localPlayer.inventory.Quiver, 1);
+								//ClientSetValue(client, WWItemSlot::BowMaxAmmo, &localPlayer.inventory.Quiver, 1);
+								ClientUpgrade(client, WWUpgradeItem::ug_Quiver);
 							}
 						}
 
@@ -643,12 +706,12 @@ UINT NewClientThread(LPVOID newClient)
 								// Update local player
 								localPlayer.inventory.BombBag = remotePlayer.inventory.BombBag;
 								DolphinWrite8(WWItemSlot::BombsMaxAmmo, localPlayer.inventory.BombBag);
-								// Print to console?
 							}
 							else
 							{
 								// Update remote player
-								ClientSetValue(client, WWItemSlot::BombsMaxAmmo, &localPlayer.inventory.BombBag, 1);
+								//ClientSetValue(client, WWItemSlot::BombsMaxAmmo, &localPlayer.inventory.BombBag, 1);
+								ClientUpgrade(client, WWUpgradeItem::ug_BombBag);
 							}
 						}
 
@@ -660,12 +723,12 @@ UINT NewClientThread(LPVOID newClient)
 								// Update local player
 								localPlayer.inventory.Hearts = remotePlayer.inventory.Hearts;
 								DolphinWrite8(WWItemSlot::HeartContainers, localPlayer.inventory.Hearts);
-								// Print to console?
 							}
 							else
 							{
 								// Update remote player
-								ClientSetValue(client, WWItemSlot::HeartContainers, &localPlayer.inventory.Hearts, 1);
+								//ClientSetValue(client, WWItemSlot::HeartContainers, &localPlayer.inventory.Hearts, 1);
+								ClientUpgrade(client, WWUpgradeItem::ug_Hearts);
 							}
 						}
 
@@ -746,6 +809,11 @@ UINT TestModeCommandsThread(LPVOID p)
 {
 	Player *thisPlayer = (Player*)p;
 	bool checksumKeydown = false;
+	bool walletKey = false;
+	bool magicKey = false;
+	bool quiverKey = false;
+	bool bombKey = false;
+	bool heartsKey = false;
 	while (running)
 	{
 		if ((GetKeyState('C') & 0x8000) > 0)
@@ -763,13 +831,71 @@ UINT TestModeCommandsThread(LPVOID p)
 		}
 
 		if ((GetKeyState('1') & 0x8000) > 0)
-			SetSword(1);
+		{
+			if (!walletKey)
+			{
+				walletKey = true;
+				SetPearls(0x07);
+			}
+		}
+		else
+		{
+			walletKey = false;
+		}
+
 		if ((GetKeyState('2') & 0x8000) > 0)
-			SetSword(2);
+		{
+			if (!magicKey)
+			{
+				magicKey = true;
+				UpgradeMagic();
+			}
+		}
+		else
+		{
+			magicKey = false;
+		}
+
 		if ((GetKeyState('3') & 0x8000) > 0)
-			SetSword(3);
+		{
+			if (!quiverKey)
+			{
+				quiverKey = true;
+				UpgradeQuiver();
+			}
+		}
+		else
+		{
+			quiverKey = false;
+		}
+
 		if ((GetKeyState('4') & 0x8000) > 0)
-			SetSword(4);
+		{
+			if (!bombKey)
+			{
+				bombKey = true;
+				UpgradeBombBag();
+			}
+		}
+		else
+		{
+			bombKey = false;
+		}
+
+		if ((GetKeyState('5') & 0x8000) > 0)
+		{
+			if (!heartsKey)
+			{
+				heartsKey = true;
+				AddHeartContainer();
+			}
+		}
+		else
+		{
+			heartsKey = false;
+		}
+
+
 	}
 	
 	return 0;

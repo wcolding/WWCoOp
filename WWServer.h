@@ -7,14 +7,17 @@
 #define WW_DEFAULT_PORT "2821"
 #define WW_INTERVAL 1000
 
-#define WW_COMMAND_POLL 0x0609
-#define WW_COMMAND_SET	0x060A   // WW_COMMAND_SET, address, value, length
-#define WW_COMMAND_NAME 0x060B
-#define WW_COMMAND_SET_CHARTS 0x060C // WW_COMMAND_SET_CHARTS, value
-#define WW_COMMAND_GIVE_ITEM 0x060D
+#define WW_COMMAND_POLL         0x0609
+#define WW_COMMAND_SET_CHARTS   0x060A   // WW_COMMAND_SET_CHARTS, value
+#define WW_COMMAND_GIVE_ITEM    0x060B
+#define WW_COMMAND_SET_SONGS    0x060C
+#define WW_COMMAND_SET_TRIFORCE 0x060D
+#define WW_COMMAND_SET_PEARLS   0x060E
+#define WW_COMMAND_SET_STATUES  0x060F
+#define WW_COMMAND_UPGRADE      0x0610
+#define WW_COMMAND_SET	        0x0611   // WW_COMMAND_SET, address, value, length
 
 #define WW_RESPONSE_POLL 0x0909
-#define WW_RESPONSE_NAME 0x090B
 #define WW_RESPONSE_FLAG 0x090C
 
 bool verbose = false;
@@ -60,22 +63,62 @@ short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 
 // Automates the sending of a WW_COMMAND_SET packet to a client
 // this is buggy as hell and probably a bad idea the more I think about it
-int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t dataLen )
-{
-	char buffer[WWINV_BUFFER_LENGTH];
-	SetBufferCommand(buffer, WW_COMMAND_SET);
-	unsigned int address = BASE_OFFSET + _address;
-	memcpy(&buffer[2], &address, 4); // address
-	memcpy(&buffer[6], &data, dataLen); // value
-	memcpy(&buffer[6+dataLen], &dataLen, 4); // size to write
-
-	return send(client, buffer, 6 + dataLen + 4, 0);
-}
+//int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t dataLen )
+//{
+//	char buffer[WWINV_BUFFER_LENGTH];
+//	SetBufferCommand(buffer, WW_COMMAND_SET);
+//	unsigned int address = BASE_OFFSET + _address;
+//	memcpy(&buffer[2], &address, 4); // address
+//	memcpy(&buffer[6], &data, dataLen); // value
+//	memcpy(&buffer[6+dataLen], &dataLen, 4); // size to write
+//
+//	return send(client, buffer, 6 + dataLen + 4, 0);
+//}
 
 int ClientGiveItem(SOCKET client, WWItem item)
 {
 	char buffer[WWINV_BUFFER_LENGTH];
 	SetBufferCommand(buffer, WW_COMMAND_GIVE_ITEM);
+	buffer[2] = item;
+	return send(client, buffer, 3, 0);
+}
+
+int ClientSetSongs(SOCKET client, __int8 mask)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_SET_TRIFORCE);
+	buffer[2] = mask;
+	return send(client, buffer, 3, 0);
+}
+
+int ClientSetTriforce(SOCKET client, __int8 mask)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_SET_TRIFORCE);
+	buffer[2] = mask;
+	return send(client, buffer, 3, 0);
+}
+
+int ClientSetPearls(SOCKET client, __int8 mask)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_SET_PEARLS);
+	buffer[2] = mask;
+	return send(client, buffer, 3, 0);
+}
+
+int ClientSetStatues(SOCKET client, __int8 mask)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_SET_STATUES);
+	buffer[2] = mask;
+	return send(client, buffer, 3, 0);
+}
+
+int ClientUpgrade(SOCKET client, WWUpgradeItem item)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_UPGRADE);
 	buffer[2] = item;
 	return send(client, buffer, 3, 0);
 }

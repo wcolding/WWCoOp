@@ -80,7 +80,6 @@ typedef enum : __int8
 	PostmanStatue	=	0x96,
 	ShopGuruStatue	=	0x97,
 
-	// Unsure where/how these are stored
 	HurricaneSpin	=	0xAA,
 	TingleStatue1	=	0xA3, // Dragon 00000100
 	TingleStatue2	=	0xA4, // Forbidden 00001000
@@ -126,6 +125,7 @@ typedef enum
 	SongsSlot		=	0x003C4CC5,
 	TriforceSlot	=	0x003C4CC6,
 	PearlSlot		=	0x003C4CC7,
+	SetPearlsSlot   =   0x003C5240,
 	ChartSlot		=	0x003C4CDC,
 	OpenedChartSlot	=	0x003C4CEC,
 	
@@ -373,3 +373,13 @@ typedef enum : __int8
 
 const DWORD ItemInfoStart = INV_OFFSET;
 const DWORD ItemInfoEnd = WWItemSlot::TriforceSlot;
+
+typedef enum : __int8
+{
+	ug_Wallet,
+	ug_Magic,
+	ug_Quiver,
+	ug_BombBag,
+	ug_Hearts,
+	ug_PoH
+} WWUpgradeItem;

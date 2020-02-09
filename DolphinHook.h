@@ -191,6 +191,8 @@ void StoreInventoryToProcess(WWInventory patch)
 	if (patch.BombBag > 0)
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::BombsMaxAmmo), &patch.BombBag, 1, nullptr);
 
+	// Hearts?
+
 	if (patch.itemStates[sizeof(patch.itemStates) - 1] > 0)
 		WriteMappedState(sizeof(patch.itemStates) - 1, 1); // Hero's Charm will only exist in state 0 or 1 (as state 2 is when it is equipped)
 
