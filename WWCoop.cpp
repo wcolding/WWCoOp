@@ -209,6 +209,8 @@ int main(int argc, char *argv[])
 
 		while (running)
 		{
+			swapInv = localPlayer.inventory;
+
 			memset(&buffer, 0, sizeof(buffer));
 			memset(&sendBuffer, 0, sizeof(sendBuffer));
 			bytesRead = recv(client, buffer, sizeof(buffer), 0);
@@ -265,6 +267,10 @@ int main(int argc, char *argv[])
 				}
 			}
 
+			// Check for changed inventory and print it to console
+			localPlayer.inventory = GetInventoryFromProcess();
+			patchInv = MakePatch(swapInv, localPlayer.inventory);
+			PrintInventory(patchInv);
 		}
 
 		CloseHandle(DolphinHandle);
