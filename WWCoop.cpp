@@ -326,6 +326,7 @@ int main(int argc, char *argv[])
 						break;
 
 					// Skipping bottles for the moment
+
 					case WWItem::MailBag:
 						GiveMailBag();
 						break; 
@@ -835,7 +836,7 @@ UINT TestModeCommandsThread(LPVOID p)
 			if (!walletKey)
 			{
 				walletKey = true;
-				SetPearls(0x07);
+				SetTriforce(0xFF);
 			}
 		}
 		else

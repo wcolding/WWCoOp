@@ -86,7 +86,7 @@ int ClientGiveItem(SOCKET client, WWItem item)
 int ClientSetSongs(SOCKET client, __int8 mask)
 {
 	char buffer[WWINV_BUFFER_LENGTH];
-	SetBufferCommand(buffer, WW_COMMAND_SET_TRIFORCE);
+	SetBufferCommand(buffer, WW_COMMAND_SET_SONGS);
 	buffer[2] = mask;
 	return send(client, buffer, 3, 0);
 }
