@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
 
-		AfxBeginThread(TestModeCommandsThread, &localPlayer);
+		//AfxBeginThread(TestModeCommandsThread, &localPlayer);
 
 		while (running)
 		{
@@ -216,6 +216,9 @@ int main(int argc, char *argv[])
 			memset(&buffer, 0, sizeof(buffer));
 			memset(&sendBuffer, 0, sizeof(sendBuffer));
 			bytesRead = recv(client, buffer, sizeof(buffer), 0);
+
+			if (bytesRead < 1)
+				goto DISCONNECT_FROM_SERVER;
 
 			if (bytesRead >= 2)
 			{
@@ -451,7 +454,9 @@ int main(int argc, char *argv[])
 			patchInv = MakePatch(swapInv, localPlayer.inventory);
 			PrintInventory(patchInv);
 		}
-
+	DISCONNECT_FROM_SERVER:
+		std::cout << "Lost connection to server. Terminating..." << std::endl;
+		closesocket(client);
 		CloseHandle(DolphinHandle);
 		return 0;
 	}
