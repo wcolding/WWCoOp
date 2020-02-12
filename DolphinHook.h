@@ -46,11 +46,13 @@ WWInventory GetInventoryFromProcess()
 	__int8 equipBuffer[3];
 	__int8 mailBuffer[8];
 	__int8 statueBuffer;
+	__int8 hurricaneBuffer;
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + ItemInfoStart), &p1Buffer, sizeof(p1Buffer), nullptr);
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::HeartContainers), &p2Buffer, sizeof(p2Buffer), nullptr);
 	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWEquipSlot::X_BUTTON), &equipBuffer, sizeof(equipBuffer), nullptr);
 	memcpy(&mailBuffer, &p2Buffer[WWItemSlot::MailBagStart - WWItemSlot::HeartContainers], sizeof(mailBuffer));
 	statueBuffer = DolphinRead8(WWItemSlot::StatuesSlot);
+	hurricaneBuffer = DolphinRead8(WWItemSlot::HurricaneSpinSlot);
 
 	int i;
 	int c;
@@ -89,7 +91,8 @@ WWInventory GetInventoryFromProcess()
 	temp.Triforce = p2Buffer[WWItemSlot::TriforceSlot - WWItemSlot::HeartContainers];
 	temp.Pearls = p2Buffer[WWItemSlot::PearlSlot - WWItemSlot::HeartContainers];
 	temp.Statues = statueBuffer;
-	
+	temp.HurricaneSpin = hurricaneBuffer;
+
 	char chartBuffer[8];
 	memcpy(&chartBuffer, &p2Buffer[WWItemSlot::ChartSlot - WWItemSlot::HeartContainers], sizeof(chartBuffer));
 	temp.Charts = GetChartsFromBuffer(chartBuffer);

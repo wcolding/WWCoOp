@@ -68,6 +68,7 @@ struct WWInventory
 	__int8 BombBag;
 	__int8 Hearts;
 	__int8 PiecesofHeart; // still have to find this
+	__int8 HurricaneSpin; 
 	__int8 XButtonEquip;
 	__int8 YButtonEquip;
 	__int8 ZButtonEquip;
@@ -85,6 +86,7 @@ struct WWInventory
 		BombBag = 30;
 		Hearts = 0;
 		PiecesofHeart = 0;
+		HurricaneSpin = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
 	}
 
@@ -112,6 +114,8 @@ struct WWInventory
 
 		Hearts = patch.Hearts;
 		PiecesofHeart = patch.PiecesofHeart;
+
+		HurricaneSpin = patch.HurricaneSpin;
 
 		XButtonEquip = patch.XButtonEquip;
 		YButtonEquip = patch.YButtonEquip;
@@ -148,6 +152,7 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 	patch.Magic = newInv.Magic > oldInv.Magic ? newInv.Magic : 0;
 	patch.Quiver = newInv.Quiver > oldInv.Quiver ? newInv.Quiver : 0;
 	patch.BombBag = newInv.BombBag > oldInv.BombBag ? newInv.BombBag : 0;
+	patch.HurricaneSpin = newInv.HurricaneSpin > oldInv.HurricaneSpin ? newInv.HurricaneSpin : 0;
 
 	patch.Hearts = newInv.Hearts - oldInv.Hearts;
 
@@ -156,6 +161,8 @@ WWInventory MakePatch(WWInventory oldInv, WWInventory newInv)
 	patch.Triforce = oldInv.Triforce ^ newInv.Triforce;
 	patch.Statues = oldInv.Statues ^ newInv.Statues;
 	patch.Charts.SetState(oldInv.Charts.GetState() ^ newInv.Charts.GetState());
+
+	
 
 	return patch;
 }
@@ -225,6 +232,9 @@ vector<string> GetInventoryStrings(WWInventory inv)
 	default:
 		break;
 	}
+
+	if (inv.HurricaneSpin > 0)
+		builder.push_back("Hurricane Spin");
 
 	if ((inv.Songs & WWSongMask::WindsRequiem) != 0)
 		builder.push_back("Wind's Requiem");
@@ -416,7 +426,6 @@ void PrintInventory(WWInventory inv)
 		std::cout << itemsList[i] << std::endl;
 }
 
-// Deprecating this in favor of Player checksum evaluation
 bool InvChanged(WWInventory oldInv, WWInventory newInv)
 {
 	int i;
@@ -444,6 +453,8 @@ bool InvChanged(WWInventory oldInv, WWInventory newInv)
 	if (oldInv.Pearls != newInv.Pearls)
 		return true;
 	if (oldInv.Statues != newInv.Statues)
+		return true;
+	if (oldInv.HurricaneSpin != newInv.HurricaneSpin)
 		return true;
 	if (oldInv.Charts.GetState() != newInv.Charts.GetState())
 		return true;

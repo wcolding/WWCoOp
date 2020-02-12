@@ -311,6 +311,11 @@ void AddHeartContainer()
 	DolphinWrite8(WWItemSlot::HeartContainers, hearts);
 }
 
+void GiveHurricaneSpin()
+{
+	DolphinWrite8(WWItemSlot::HurricaneSpinSlot, 1);
+}
+
 // Adds an item to the first empty mailbag slot if the mailbag does not contain it already
 void AddToMail(WWItem mail)
 {

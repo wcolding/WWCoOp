@@ -375,6 +375,10 @@ int main(int argc, char *argv[])
 						AddToMail(WWItem::CabanaDeed);
 						break;
 
+					case WWItem::HurricaneSpin:
+						GiveHurricaneSpin();
+						break;
+
 					default:
 						break;
 					}
@@ -471,9 +475,7 @@ int main(int argc, char *argv[])
 		{
 			// Wait for a game to be started
 		}
-
-		localPlayer.SetName("Test Player");
-
+		
 		std::cout << localPlayer.name << " started a game!" << std::endl << std::endl;
 
 		localPlayer.inventory = GetInventoryFromProcess();
@@ -747,7 +749,21 @@ UINT NewClientThread(LPVOID newClient)
 							// PoH not supported yet	
 						}
 
-
+						if (localPlayer.inventory.HurricaneSpin != remotePlayer.inventory.HurricaneSpin)
+						{
+							setClient = (localPlayer.inventory.HurricaneSpin > remotePlayer.inventory.HurricaneSpin);
+							if (!setClient)
+							{
+								// Update local player
+								localPlayer.inventory.HurricaneSpin = remotePlayer.inventory.HurricaneSpin;
+								GiveHurricaneSpin();
+							}
+							else
+							{
+								// Update remote player
+								ClientGiveItem(client, WWItem::HurricaneSpin);
+							}
+						}
 					}
 				}
 				

@@ -189,7 +189,7 @@ int CalculateChecksum(WWInventory inv)
 
 	// Fourth byte
 	// Add the other values together, dump the sum into an array, XOR the array
-	int sum = inv.Wallet + inv.Magic + inv.Quiver + inv.BombBag + inv.Hearts + inv.PiecesofHeart;
+	int sum = inv.Wallet + inv.Magic + inv.Quiver + inv.BombBag + inv.Hearts + inv.PiecesofHeart + inv.HurricaneSpin;
 	char sumBuffer[4];
 	memcpy(&sumBuffer, &sum, sizeof(sum));
 	checksum[3] = sumBuffer[0];

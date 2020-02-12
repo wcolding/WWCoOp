@@ -137,7 +137,8 @@ typedef enum
 	HeartContainers =	0x003C4C09,
 	CurrentHearts	=	0x003C4C0B,
 
-	StatuesSlot		=   0x003C5296
+	HurricaneSpinSlot = 0x003C5295,
+	StatuesSlot		  = 0x003C5296	
 } WWItemSlot;
 
 typedef enum
