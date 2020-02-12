@@ -254,8 +254,8 @@ void UpgradeWallet()
 void UpgradeMagic()
 {
 	__int8 magic = DolphinRead8(WWItemSlot::MagicSlot);
-	if (magic < 20)
-		magic += 10;
+	if (magic < 0x20)
+		magic += 0x10;
 	DolphinWrite8(WWItemSlot::MagicSlot, magic);
 }
 
