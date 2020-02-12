@@ -111,6 +111,8 @@ int main(int argc, char *argv[])
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
 
+		AfxBeginThread(TestModeCommandsThread, &localPlayer);
+
 		while (running)
 		{
 			swapInv = GetInventoryFromProcess();
@@ -380,25 +382,33 @@ int main(int argc, char *argv[])
 					break;
 				}
 				case WW_COMMAND_SET_SONGS:
+				{
 					if (bytesRead < 3)
 						break;
 					SetSongs(buffer[2]);
 					break;
+				}
 				case WW_COMMAND_SET_TRIFORCE:
+				{
 					if (bytesRead < 3)
 						break;
 					SetTriforce(buffer[2]);
 					break;
+				}
 				case WW_COMMAND_SET_PEARLS:
+				{
 					if (bytesRead < 3)
 						break;
 					SetPearls(buffer[2]);
 					break;
+				}
 				case WW_COMMAND_SET_STATUES:
+				{
 					if (bytesRead < 3)
 						break;
 					SetStatues(buffer[2]);
 					break;
+				}
 				case WW_COMMAND_UPGRADE:
 				{
 					if (bytesRead < 3)
@@ -426,6 +436,7 @@ int main(int argc, char *argv[])
 					}
 					break;
 				}
+
 				default:
 					break;
 				}
@@ -475,8 +486,6 @@ int main(int argc, char *argv[])
 		std::cout << "Stage: " << oldStageName << std::endl;
 
 		AfxBeginThread(TestModeCommandsThread, &localPlayer);
-
-		
 
 		while (running)
 		{
@@ -748,34 +757,6 @@ UINT NewClientThread(LPVOID newClient)
 					// World states differ
 				}
 				
-				//// Lazy deserialization
-				//WWInventory clientInv;
-				//memcpy(&clientInv, &buffer[2], sizeof(WWInventory));
-
-				//if (InvChanged(localPlayer.inventory, clientInv))
-				//{
-				//	// Update server inventory first
-				//	patchInv = MakePatch(localPlayer.inventory, clientInv);
-
-				//	LogVerbose("Updating server inventory from client inventory");
-
-				//	PrintInventory(patchInv);
-
-				//	swapInv = localPlayer.inventory;
-				//	swapInv.UpdateInventoryFromPatch(patchInv);
-				//	StoreInventoryToProcess(patchInv);
-				//	localPlayer.inventory = swapInv;
-				//}
-
-				//// Generate a patch for this client
-				//patchInv = MakePatch(clientInv, localPlayer.inventory);
-				//SetBufferCommand(sendBuffer, WW_COMMAND_SET);
-
-				//// Lazy serialization
-				//memcpy(&sendBuffer[2], &patchInv, sizeof(WWInventory));
-				//bytesSent = send(client, sendBuffer, 2 + sizeof(WWInventory), 0);
-
-				//LogVerbose(" bytes sent to client", bytesSent);
 			}
 		}
 		
