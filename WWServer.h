@@ -15,7 +15,8 @@
 #define WW_COMMAND_SET_PEARLS   0x060E
 #define WW_COMMAND_SET_STATUES  0x060F
 #define WW_COMMAND_UPGRADE      0x0610
-#define WW_COMMAND_SET	        0x0611   // WW_COMMAND_SET, address, value, length
+#define WW_COMMAND_GIVE_CHART   0x0611
+#define WW_COMMAND_SET	        0x0612   // WW_COMMAND_SET, address, value, length
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_FLAG 0x090C
@@ -60,20 +61,6 @@ short GetBufferCommand(char (&buffer)[WWINV_BUFFER_LENGTH])
 	memcpy(&command, &swapBuffer, 2);
 	return command;
 }
-
-// Automates the sending of a WW_COMMAND_SET packet to a client
-// this is buggy as hell and probably a bad idea the more I think about it
-//int ClientSetValue(SOCKET client, unsigned int _address, char *data, size_t dataLen )
-//{
-//	char buffer[WWINV_BUFFER_LENGTH];
-//	SetBufferCommand(buffer, WW_COMMAND_SET);
-//	unsigned int address = BASE_OFFSET + _address;
-//	memcpy(&buffer[2], &address, 4); // address
-//	memcpy(&buffer[6], &data, dataLen); // value
-//	memcpy(&buffer[6+dataLen], &dataLen, 4); // size to write
-//
-//	return send(client, buffer, 6 + dataLen + 4, 0);
-//}
 
 int ClientGiveItem(SOCKET client, WWItem item)
 {

@@ -343,3 +343,23 @@ void AddToMail(WWItem mail)
 
 	}
 }
+
+void GiveChart(WWChartMaskA chart)
+{
+	__int8 chartBuffer[8];
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+	WWChartState currentChartState = GetChartsFromBuffer(chartBuffer);
+	currentChartState.a = (WWChartMaskA)((unsigned int)currentChartState.a | (unsigned int)chart);
+	SetBufferFromChartState(chartBuffer, currentChartState);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+}
+
+void GiveChart(WWChartMaskB chart)
+{
+	__int8 chartBuffer[8];
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+	WWChartState currentChartState = GetChartsFromBuffer(chartBuffer);
+	currentChartState.b = (WWChartMaskB)((unsigned int)currentChartState.b | (unsigned int)chart);
+	SetBufferFromChartState(chartBuffer, currentChartState);
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
+}

@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 				patchInv = MakePatch(localPlayer.inventory, swapInv);
 				PrintInventory(patchInv);
 				localPlayer.inventory = swapInv;
+				localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
 			}
 
 			Sleep(WW_INTERVAL);
@@ -640,7 +641,7 @@ UINT NewClientThread(LPVOID newClient)
 						// Charts differ
 						// Only set client if server has something new
 						setClient = (localPlayer.inventory.Charts.GetState() > remotePlayer.inventory.Charts.GetState());
-						__int64 newCharts = localPlayer.inventory.Charts.GetState() ^ remotePlayer.inventory.Charts.GetState();
+						__int64 newCharts = localPlayer.inventory.Charts.GetState() | remotePlayer.inventory.Charts.GetState();
 						WWChartState newChartState;
 						newChartState.SetState(newCharts);
 						char chartBuffer[8];
@@ -838,7 +839,7 @@ UINT TestModeCommandsThread(LPVOID p)
 			if (!walletKey)
 			{
 				walletKey = true;
-				SetTriforce(0xFF);
+				GiveChart(IncredibleChart);
 			}
 		}
 		else

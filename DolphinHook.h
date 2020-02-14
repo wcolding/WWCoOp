@@ -31,6 +31,16 @@ __int8 DolphinRead8(unsigned int offset)
 	return value;
 }
 
+__int64 DolphinRead64(unsigned int offset)
+{
+	if (DolphinHandle == NULL)
+		return 0;
+
+	__int64 value;
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 8, nullptr);
+	return value;
+}
+
 WWInventory GetInventoryFromProcess()
 {
 	WWInventory temp;
