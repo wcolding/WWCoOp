@@ -293,14 +293,14 @@ int HookDolphinProcess()
 	
 	GetWindowThreadProcessId(window, &DolphinProcess);
 	
-	/*HANDLE snapshot = CreateToolhelp32Snapshot(ULONG_PTR(TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE), DolphinProcess);
+	HANDLE snapshot = CreateToolhelp32Snapshot(ULONG_PTR(TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE), DolphinProcess);
 
 	if (snapshot == INVALID_HANDLE_VALUE)
 	{
 		DWORD error = GetLastError();
 		std::cout << "Couldn't get snapshot handle, error #" << error << std::endl;
 	}
-	*/
+	
 	DolphinHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, DolphinProcess);
 
 	if (DolphinHandle == NULL)
@@ -309,9 +309,11 @@ int HookDolphinProcess()
 		return -2;
 	}
 
-	/*MODULEENTRY32 module;
+	MODULEENTRY32 module;
 	Module32First(snapshot, &module);
-	DolphinBaseAddress = (QWORD)module.modBaseAddr;*/
+	DolphinBaseAddress = (QWORD)module.modBaseAddr;
+
+	CloseHandle(snapshot);
 
 	char _loadedISO[6];
 
@@ -341,8 +343,8 @@ int HookDolphinProcess()
 	else
 	{
 		std::cout << "Found Wind Waker Randomizer ISO!" << std::endl;
+		return 0;
 	}
-	return 0;
 }
 
 bool IsWWRandoLoaded()
