@@ -344,6 +344,24 @@ void AddToMail(WWItem mail)
 	}
 }
 
+// Adds an empty bottle to the first available bottle slot
+void GiveNewBottle()
+{
+	__int8 bottles[4];
+	memset(&bottles, WWItem::NoItem, 4);
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + INV_OFFSET + 14), &bottles, 4, nullptr);
+
+	// Add to first empty slot
+	for (int i = 0; i < 4; i++)
+	{
+		if (bottles[i] == WWItem::NoItem)
+		{
+			DolphinWrite8(INV_OFFSET + 14 + i, WWBottleContents::Empty);
+			return;
+		}
+	}
+}
+
 void GiveChart(WWChartMaskA chart)
 {
 	__int8 chartBuffer[8];

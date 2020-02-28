@@ -9,9 +9,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #pragma comment (lib, "Ws2_32.lib")
+#include <Tlhelp32.h>
 
 #include <string>
 #include <vector>
 using namespace std;
 
-#define VERSION "0.4.7"
+#define VERSION "0.5.0"

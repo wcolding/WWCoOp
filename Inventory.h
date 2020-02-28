@@ -92,6 +92,7 @@ struct WWInventory
 
 	void UpdateInventoryFromPatch(WWInventory patch)
 	{
+		// itemStates section
 		for (int i = 0; i < sizeof(itemStates) - 1; i++)
 		{
 			if (patch.itemStates[i] > itemStates[i])

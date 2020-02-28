@@ -1,9 +1,14 @@
 #pragma once
 #include "Inventory.h"
 
-#define BASE_OFFSET (unsigned int)0x7FFF0000
+#define BASE_OFFSET (QWORD)0x7FFF0000
+#define LOADED_ISO_PTR (QWORD)0x011933F8
+#define LOADED_ISO_OFFSET (QWORD)0x230
 
 HANDLE DolphinHandle = NULL;
+DWORD DolphinProcess = NULL;
+QWORD DolphinBaseAddress = 0;
+QWORD isoIDAddress = 0;
 
 void DolphinWrite8(unsigned int offset, __int8 value)
 {
@@ -286,12 +291,68 @@ int HookDolphinProcess()
 		return -1;
 	}
 	
-	DWORD process;
-	GetWindowThreadProcessId(window, &process);
-	DolphinHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process);
+	GetWindowThreadProcessId(window, &DolphinProcess);
+	
+	/*HANDLE snapshot = CreateToolhelp32Snapshot(ULONG_PTR(TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE), DolphinProcess);
+
+	if (snapshot == INVALID_HANDLE_VALUE)
+	{
+		DWORD error = GetLastError();
+		std::cout << "Couldn't get snapshot handle, error #" << error << std::endl;
+	}
+	*/
+	DolphinHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, DolphinProcess);
+
 	if (DolphinHandle == NULL)
 	{
 		std::cout << "Unable to open Dolphin process." << std::endl;
 		return -2;
 	}
+
+	/*MODULEENTRY32 module;
+	Module32First(snapshot, &module);
+	DolphinBaseAddress = (QWORD)module.modBaseAddr;*/
+
+	char _loadedISO[6];
+
+	DWORD isoOffsets[] = { 0x011933F8, 0x230 };
+	QWORD isoBuffer = DolphinBaseAddress + isoOffsets[0];
+
+	ReadProcessMemory(DolphinHandle, (LPVOID)isoBuffer, &isoBuffer, 8, nullptr);
+	isoBuffer += isoOffsets[1];
+	isoIDAddress = isoBuffer;
+
+	ReadProcessMemory(DolphinHandle, (LPVOID)isoIDAddress, &_loadedISO, 6, nullptr);
+
+	string loadedISO;
+	loadedISO.assign(_loadedISO, 6);
+
+	if (loadedISO == "000000")
+	{
+		std::cout << "No ISO loaded! Open randomizer file in Dolphin before launching this program." << std::endl;
+		return -3;
+	}
+
+	if (loadedISO != "GZLE99")
+	{
+		std::cout << "Loaded ISO is not a valid Wind Waker Randomizer file." << std::endl;
+		return -4;
+	}
+	else
+	{
+		std::cout << "Found Wind Waker Randomizer ISO!" << std::endl;
+	}
+}
+
+bool IsWWRandoLoaded()
+{
+	if ((DolphinHandle == NULL) || (isoIDAddress == 0))
+		return false;
+
+	char _loadedISO[6];
+	string loadedISO;
+	ReadProcessMemory(DolphinHandle, (LPVOID)isoIDAddress, &_loadedISO, 6, nullptr);
+	loadedISO.assign(_loadedISO, 6);
+
+	return (loadedISO == "GZLE99");
 }
