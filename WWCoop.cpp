@@ -89,10 +89,10 @@ int main(int argc, char *argv[])
 			return -5;
 		}
 		
-		HookDolphinProcess();
-		if (DolphinHandle == NULL)
+		int hook = HookDolphinProcess();
+		if ((DolphinHandle == NULL) || (hook != 0))
 		{
-			std::cout << "Unable to hook Dolphin process." << std::endl;
+			std::cout << "Problem hooking Dolphin process." << std::endl;
 			closesocket(listener);
 			WSACleanup();
 			return -6;
@@ -203,10 +203,10 @@ int main(int argc, char *argv[])
 
 		std::cout << "Connected to server at " << argv[2] << ":" << argv[3] << std::endl;
 
-		HookDolphinProcess();
-		if (DolphinHandle == NULL)
+		int hook = HookDolphinProcess();
+		if ((DolphinHandle == NULL) || (hook != 0))
 		{
-			std::cout << "Unable to hook Dolphin process." << std::endl;
+			std::cout << "Problem hooking Dolphin process." << std::endl;
 			return -6;
 		}
 
@@ -477,10 +477,10 @@ int main(int argc, char *argv[])
 	// Test mode, no networking
 	else if (argv[1] == string("-testmode"))
 	{
-		HookDolphinProcess();
-		if (DolphinHandle == NULL)
+		int hook = HookDolphinProcess();
+		if ((DolphinHandle == NULL) || (hook !=0))
 		{
-			std::cout << "Unable to hook Dolphin process." << std::endl;
+			std::cout << "Problem hooking Dolphin process." << std::endl;
 			return -6;
 		}
 

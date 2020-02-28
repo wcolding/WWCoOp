@@ -342,6 +342,7 @@ int HookDolphinProcess()
 	{
 		std::cout << "Found Wind Waker Randomizer ISO!" << std::endl;
 	}
+	return 0;
 }
 
 bool IsWWRandoLoaded()
