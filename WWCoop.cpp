@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 	vector<string> args(argv + 1, argv + argc);
 
 	// Server configuration
+
 	if ((args[0] == string("-s")) || (args[0] == string("-S")))
 	{
 		if (argc != 3)

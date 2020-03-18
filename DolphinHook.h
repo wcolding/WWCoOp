@@ -310,6 +310,7 @@ int HookDolphinProcess()
 	}
 
 	MODULEENTRY32 module;
+	module.dwSize = sizeof(MODULEENTRY32);
 	Module32First(snapshot, &module);
 	DolphinBaseAddress = (QWORD)module.modBaseAddr;
 
@@ -329,13 +330,13 @@ int HookDolphinProcess()
 	string loadedISO;
 	loadedISO.assign(_loadedISO, 6);
 
-	if (loadedISO == "000000")
+	if (loadedISO == string("000000"))
 	{
 		std::cout << "No ISO loaded! Open randomizer file in Dolphin before launching this program." << std::endl;
 		return -3;
 	}
 
-	if (loadedISO != "GZLE99")
+	if (loadedISO != string("GZLE99"))
 	{
 		std::cout << "Loaded ISO is not a valid Wind Waker Randomizer file." << std::endl;
 		return -4;
