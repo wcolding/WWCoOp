@@ -37,9 +37,10 @@ int main(int argc, char *argv[])
 	int bytesRead = 0;
 
 	vector<string> itemsList;
-	
+	vector<string> args(argv + 1, argv + argc);
+
 	// Server configuration
-	if (argv[1] == string("-s") || argv[1] == string("-S"))
+	if ((args[0] == string("-s")) || (args[0] == string("-S")))
 	{
 		if (argc != 3)
 		{
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Client configuration
-	else if (argv[1] == string("-c") || argv[1] == string("-C"))
+	else if (args[0] == string("-c") || args[0] == string("-C"))
 	{
 		if (argc != 4)
 		{
@@ -475,7 +476,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	// Test mode, no networking
-	else if (argv[1] == string("-testmode"))
+	else if (args[0] == string("-testmode"))
 	{
 		int hook = HookDolphinProcess();
 		if ((DolphinHandle == NULL) || (hook !=0))
