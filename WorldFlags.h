@@ -2,7 +2,8 @@
 #include "WWCore.h"
 #include "DolphinHook.h"
 
-#define WW_LOCAL_FLAGS 0x003C5382
+#define WW_LOCAL_FLAGS 0x003C5380
+#define WW_FLAGS_SIZE 12
 #define WW_KEYS_OFFSET 0x1E
 
 #define SCENE_COUNTER 0x003CA620
@@ -38,6 +39,7 @@ struct WorldGroup
 {
 	unsigned int permAddress;
 	vector <string> stageNames;
+	__int8 flags[WW_FLAGS_SIZE];
 
 	bool ContainsStage(string stage)
 	{
@@ -52,11 +54,11 @@ struct WorldGroup
 
 WorldGroup wg_OutsetInterior = { 0x003C5116, {"LinkUG", "Omasao", "A_mori"} }; // This address gets reused as the last non-permanent flags in readable memory? Maybe? idk yet
 
-WorldGroup wg_DRC	= { 0x003C4FF6, {"M_NewD2", "M_Dra09", "M_DragB"} };
-WorldGroup wg_FW	= { 0x003C501A, {"kindan", "kinMB", "kinBOSS"} };
-WorldGroup wg_TotG	= { 0x003C503E, {"Siren", "SirenMB", "SirenB"} };
-WorldGroup wg_Earth = { 0x003C5062, {"M_Dai", "M_DaiMB", "M_DaiB"} };
-WorldGroup wg_Wind	= { 0x003C5086, {"kaze", "kazeMB", "kazeB"} }; 
+WorldGroup wg_DRC	= { 0x003C4FF4, {"M_NewD2", "M_Dra09", "M_DragB"} };
+WorldGroup wg_FW	= { 0x003C5018, {"kindan", "kinMB", "kinBOSS"} };
+WorldGroup wg_TotG	= { 0x003C503C, {"Siren", "SirenMB", "SirenB"} };
+WorldGroup wg_Earth = { 0x003C5060, {"M_Dai", "M_DaiMB", "M_DaiB"} };
+WorldGroup wg_Wind	= { 0x003C5084, {"kaze", "kazeMB", "kazeB"} }; 
 
 struct WorldGroupFlag
 {
@@ -142,19 +144,17 @@ struct WWFlags
 {
 	__int8 TowerRaised;
 	__int8 TingleFree;
-	__int8 TingleStatues;
 	__int8 GreatFairies;
-	__int8 DRCFlags[10];
-	__int8 FWFlags[10];
-	__int8 TotGFlags[10];
-	__int8 EarthFlags[18];
-	__int8 WindFlags[10];
+	__int8 DRCFlags[WW_FLAGS_SIZE];
+	__int8 FWFlags[WW_FLAGS_SIZE];
+	__int8 TotGFlags[WW_FLAGS_SIZE];
+	__int8 EarthFlags[WW_FLAGS_SIZE];
+	__int8 WindFlags[WW_FLAGS_SIZE];
 
 	WWFlags()
 	{
 		TowerRaised = 0;
 		TingleFree = 0;
-		TingleStatues = 0;
 		GreatFairies = 0;
 		memset(&DRCFlags, 0, sizeof(DRCFlags));
 		memset(&FWFlags, 0, sizeof(FWFlags));
@@ -199,7 +199,6 @@ int WWFlagsChanged(WWFlags oldFlags, WWFlags newFlags)
 	{
 		total += FlagsChanged(oldFlags.TowerRaised ^ newFlags.TowerRaised);
 		total += FlagsChanged(oldFlags.TingleFree ^ newFlags.TingleFree);
-		total += FlagsChanged(oldFlags.TingleStatues ^ newFlags.TingleStatues);
 		total += FlagsChanged(oldFlags.GreatFairies ^ newFlags.GreatFairies);
 
 		for (int i = 0; i < sizeof(oldFlags.DRCFlags); i++)
@@ -222,7 +221,6 @@ WWFlags GetFlagsFromProcess()
 	WWFlags flags;
 	flags.TowerRaised = GetFlag(TotGRaised);
 	flags.TingleFree = GetFlag(TingleIsFree);
-	flags.TingleStatues = GetFlag(DragonTingleStatue);
 	flags.GreatFairies = GetFlag(GreatFairyGift1);
 
 	string currentStage = GetCurrentStage();
@@ -275,7 +273,6 @@ void StoreFlagsToProcess(WWFlags flags)
 {
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TotGRaised.address), &flags.TowerRaised, 1, nullptr);
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + TingleIsFree.address), &flags.TingleFree, 1, nullptr);
-	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + DragonTingleStatue.address), &flags.TingleStatues, 1, nullptr);
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + GreatFairyGift1.address), &flags.GreatFairies, 1, nullptr);
 
 	string currentStage = GetCurrentStage();
@@ -322,22 +319,11 @@ void StoreFlagsToProcess(WWFlags flags)
 		WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + wg_Wind.permAddress), &flags.WindFlags, sizeof(flags.WindFlags), nullptr);
 }
 
-void PatchFlags(WWFlags oldFlags, WWFlags newFlags) // May not even use this
+// ORs the second parameter's flags to the first's flags and stores it to the first parameter
+void MergeFlags(__int8 (&a)[WW_FLAGS_SIZE], __int8(&b)[WW_FLAGS_SIZE])
 {
-	if (WWFlagsChanged(oldFlags, newFlags) > 0)
-	{
-		char oldBuffer[sizeof(WWFlags)];
-		char newBuffer[sizeof(WWFlags)];
-		memcpy(&oldBuffer, &oldFlags, sizeof(WWFlags));
-		memcpy(&newBuffer, &newFlags, sizeof(WWFlags));
-
-		for (int i = 0; i < sizeof(WWFlags); i++)
-		{
-			oldBuffer[i] = oldBuffer[i] | newBuffer[i];
-		}
-
-		memcpy(&oldFlags, &oldBuffer, sizeof(WWFlags));
-	}
+	for (int i = 0; i < WW_FLAGS_SIZE; i++)
+		a[i] |= b[i];
 }
 
 vector<WorldGroup> worldGroups

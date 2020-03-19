@@ -507,26 +507,33 @@ int main(int argc, char *argv[])
 
 		while (running)
 		{
-			swapInv = GetInventoryFromProcess();
-			if (InvChanged(localPlayer.inventory, swapInv))
+			if (IsWWRandoLoaded())
 			{
-				patchInv = MakePatch(localPlayer.inventory, swapInv);
-				PrintInventory(patchInv);
-				localPlayer.inventory = swapInv;
+				swapInv = GetInventoryFromProcess();
+				if (InvChanged(localPlayer.inventory, swapInv))
+				{
+					patchInv = MakePatch(localPlayer.inventory, swapInv);
+					PrintInventory(patchInv);
+					localPlayer.inventory = swapInv;
 
-				localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
-				
-				std::cout << "Checksum: " << localPlayer.checksumA << std::endl;
+					localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
+
+					std::cout << "Checksum: " << localPlayer.checksumA << std::endl;
+				}
+
+				localFlags.Update();
+				if (localFlags.stageName != oldStageName)
+				{
+					oldStageName = localFlags.stageName;
+					std::cout << "Stage: " << oldStageName << std::endl;
+				}
+
+				Sleep(WW_INTERVAL);
 			}
-
-			localFlags.Update();
-			if (localFlags.stageName != oldStageName)
+			else
 			{
-				oldStageName = localFlags.stageName;
-				std::cout << "Stage: " << oldStageName << std::endl;
+				running == false;
 			}
-
-			Sleep(WW_INTERVAL);
 		}
 
 		CloseHandle(DolphinHandle);
