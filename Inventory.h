@@ -67,7 +67,6 @@ struct WWInventory
 	__int8 Quiver;
 	__int8 BombBag;
 	__int8 Hearts;
-	__int8 PiecesofHeart; // still have to find this
 	__int8 HurricaneSpin; 
 	__int8 XButtonEquip;
 	__int8 YButtonEquip;
@@ -85,7 +84,6 @@ struct WWInventory
 		Quiver = 30;
 		BombBag = 30;
 		Hearts = 0;
-		PiecesofHeart = 0;
 		HurricaneSpin = 0;
 		XButtonEquip, YButtonEquip, ZButtonEquip = WWItem::NoItem;
 	}
@@ -114,7 +112,6 @@ struct WWInventory
 		BombBag = patch.BombBag;
 
 		Hearts = patch.Hearts;
-		PiecesofHeart = patch.PiecesofHeart;
 
 		HurricaneSpin = patch.HurricaneSpin;
 

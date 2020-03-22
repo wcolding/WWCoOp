@@ -216,18 +216,18 @@ void SetPearls(__int8 mask)
 	// Randomizer automatically sets these flags when you acquire a pearl
 	// This will replicate that functionality for pearls received from another player
 	if ((mask & WWPearlMask::Din) != 0)
-		currentSetPearls |= DinsPearlPlaced.flag;
+		currentSetPearls |= WWPearlsPlacedMask::PlacedDin;
 	if ((mask & WWPearlMask::Farore) != 0)
-		currentSetPearls |= FaroresPearlPlaced.flag;
+		currentSetPearls |= WWPearlsPlacedMask::PlacedFarore;
 	if ((mask & WWPearlMask::Nayru) != 0)
-		currentSetPearls |= NayrusPearlPlaced.flag;
+		currentSetPearls |= WWPearlsPlacedMask::PlacedNayru;
 
 	// If all three pearls are collected, set Tower of the Gods as raised
 	if (mask == (WWPearlMask::Din | WWPearlMask::Farore | WWPearlMask::Nayru))
 	{
-		__int8 totgRaised = DolphinRead8(TotGRaised.address);
-		totgRaised |= TotGRaised.flag;
-		DolphinWrite8(TotGRaised.address, totgRaised);
+		__int8 totgRaised = DolphinRead8(0x003C524A);
+		totgRaised |= 0x40;
+		DolphinWrite8(0x003C524A, totgRaised);
 	}
 
 	DolphinWrite8(WWItemSlot::SetPearlsSlot, currentSetPearls);

@@ -497,9 +497,12 @@ int main(int argc, char *argv[])
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
 		
-		LocalContext localFlags;
-		localFlags.Update();
-		string oldStageName = localFlags.stageName;
+		WWFlags stageFlags, oldFlags;
+		UpdateWWFlags(&stageFlags);
+		oldFlags = stageFlags;
+
+		string oldStageName = GetCurrentStage();
+		string stageName;
 
 		std::cout << "Stage: " << oldStageName << std::endl;
 
@@ -521,12 +524,32 @@ int main(int argc, char *argv[])
 					std::cout << "Checksum: " << localPlayer.checksumA << std::endl;
 				}
 
-				localFlags.Update();
-				if (localFlags.stageName != oldStageName)
+				stageName = GetCurrentStage();
+				if (stageName != oldStageName)
 				{
-					oldStageName = localFlags.stageName;
+					oldStageName = stageName;
 					std::cout << "Stage: " << oldStageName << std::endl;
 				}
+
+				UpdateWWFlags(&stageFlags);
+
+				if (oldFlags.GreatFairies.flag != stageFlags.GreatFairies.flag)
+				{
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Eastern) != 0)
+						std::cout << "Player has visited Eastern Fairy" << std::endl;
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Northern) != 0)
+						std::cout << "Player has visited Northern Fairy" << std::endl;
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Outset) != 0)
+						std::cout << "Player has visited Outset Fairy" << std::endl;
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Southern) != 0)
+						std::cout << "Player has visited Southern Fairy" << std::endl;
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Thorned) != 0)
+						std::cout << "Player has visited Thorned Fairy" << std::endl;
+					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Western) != 0)
+						std::cout << "Player has visited Western Fairy" << std::endl;
+				}
+
+				oldFlags = stageFlags;
 
 				Sleep(WW_INTERVAL);
 			}
@@ -769,11 +792,6 @@ UINT NewClientThread(LPVOID newClient)
 									//ClientSetValue(client, WWItemSlot::HeartContainers, &localPlayer.inventory.Hearts, 1);
 									ClientUpgrade(client, WWUpgradeItem::ug_Hearts);
 								}
-							}
-
-							if (localPlayer.inventory.PiecesofHeart != remotePlayer.inventory.PiecesofHeart)
-							{
-								// PoH not supported yet	
 							}
 
 							if (localPlayer.inventory.HurricaneSpin != remotePlayer.inventory.HurricaneSpin)

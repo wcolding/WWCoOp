@@ -36,6 +36,16 @@ __int8 DolphinRead8(unsigned int offset)
 	return value;
 }
 
+__int16 DolphinRead16(unsigned int offset)
+{
+	if (DolphinHandle == NULL)
+		return 0;
+
+	__int16 value;
+	ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 2, nullptr);
+	return value;
+}
+
 __int64 DolphinRead64(unsigned int offset)
 {
 	if (DolphinHandle == NULL)

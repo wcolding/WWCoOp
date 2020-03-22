@@ -21,7 +21,24 @@
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_FLAG 0x090C
 
+#define WW_TRANSFORM_POS 0x003E440C
+#define WW_TRANSFORM_Y_ROT 0x003F6F1A
+
 bool verbose = false;
+
+struct PlayerTransform
+{
+	float pos_x, pos_y, pos_z;
+	short rot_y;
+};
+
+struct LocalContext
+{
+	__int8 stageID;
+	char sceneName[8];
+	PlayerTransform transform;
+	StageInfo currentStageInfo;
+};
 
 struct Player
 {
@@ -29,7 +46,7 @@ struct Player
 	int checksumA = 0;
 	int checksumB = 0;
 	WWInventory inventory;
-	WWFlags flags;
+	LocalContext context;
 
 	void SetName(string n)
 	{
@@ -176,7 +193,7 @@ int CalculateChecksum(WWInventory inv)
 
 	// Fourth byte
 	// Add the other values together, dump the sum into an array, XOR the array
-	int sum = inv.Wallet + inv.Magic + inv.Quiver + inv.BombBag + inv.Hearts + inv.PiecesofHeart + inv.HurricaneSpin;
+	int sum = inv.Wallet + inv.Magic + inv.Quiver + inv.BombBag + inv.Hearts + inv.HurricaneSpin;
 	char sumBuffer[4];
 	memcpy(&sumBuffer, &sum, sizeof(sum));
 	checksum[3] = sumBuffer[0];
