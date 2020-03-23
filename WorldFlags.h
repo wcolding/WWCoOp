@@ -64,7 +64,7 @@ struct WorldFlag
 // Collection of WorldFlags to be shared over the network
 struct WorldFlagGroup
 {
-	vector<WorldFlag> worldFlags =
+	WorldFlag worldFlags[WORLD_FLAG_COUNT] =
 	{
 		{ 0x003C5240, 0 },	// Pearls Placed on Triangle Isles
 		{ 0x003C524A, 0 },  // Tower of the Gods Raised

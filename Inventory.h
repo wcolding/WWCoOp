@@ -1,6 +1,8 @@
 #pragma once
 #include "Items.h"
 
+#define INVENTORY_MAP_SIZE 35
+
 vector<WWItemInfo> InventoryMap =
 {
 	{INV_OFFSET, {{WWItem::NoItem, ""}, {WWItem::Telecope, "Telescope"}}},

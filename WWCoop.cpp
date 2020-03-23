@@ -675,7 +675,7 @@ UINT NewClientThread(LPVOID newClient)
 						if (localSumBuffer[0] != remoteSumBuffer[0])
 						{
 							// itemStates differ
-							for (int i = 0; i < sizeof(localPlayer.inventory.itemStates); i++)
+							for (int i = 0; i < INVENTORY_MAP_SIZE; i++)
 							{
 								TestItemStates(client, localPlayer, remotePlayer, i);
 							}
@@ -823,7 +823,6 @@ UINT NewClientThread(LPVOID newClient)
 								else
 								{
 									// Update remote player
-									//ClientSetValue(client, WWItemSlot::HeartContainers, &localPlayer.inventory.Hearts, 1);
 									ClientUpgrade(client, WWUpgradeItem::ug_Hearts);
 								}
 							}

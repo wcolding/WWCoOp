@@ -168,7 +168,7 @@ int ClientSetFlagGroup(SOCKET client, WorldFlagGroup group)
 // Chooses whether to update a local or remote player's itemState at a specified index
 void TestItemStates(SOCKET client, Player localPlayer, Player remotePlayer, int index)
 {
-	if (index >= sizeof(localPlayer.inventory.itemStates))
+	if (index >= INVENTORY_MAP_SIZE)
 		return;
 
 	if (localPlayer.inventory.itemStates[index] != remotePlayer.inventory.itemStates[index])
