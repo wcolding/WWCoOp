@@ -59,6 +59,31 @@ struct WorldFlag
 	__int8 flag;
 };
 
+// Collection of WorldFlags to be shared over the network
+struct WorldFlagGroup
+{
+	vector<WorldFlag> worldFlags =
+	{
+		{ 0x003C5240, 0 },	// Pearls Placed on Triangle Isles
+		{ 0x003C524A, 0 },  // Tower of the Gods Raised
+		{ 0x003C5237, 0 },  // Tingle is freed from jail
+		{ 0x003C525C, 0 }   // Great Fairies visited
+	};
+
+	void ReadFlags()
+	{
+		for (int i = 0; i < worldFlags.size(); i++)
+			worldFlags[i].flag = DolphinRead8(worldFlags[i].address);
+	}
+
+	void WriteFlags()
+	{
+		for (int i = 0; i < worldFlags.size(); i++)
+			DolphinWrite8(worldFlags[i].address, worldFlags[i].flag);
+	}
+};
+
+// Used to cache local player's StageInfo data
 struct WWFlags
 {
 	Stage Stages[15] =
@@ -106,29 +131,14 @@ struct WWFlags
 							 "SubD71", "TF_06"} },               // Caves + Ships
 		{ 0x0E, 0x003C5180 }                                     // ChuChu flags
 	};
-
-	// We'll cache these values and alert other users of any changes
-	WorldFlag PearlsPlaced = { 0x003C5240, 0 };
-	WorldFlag TowerRaised  = { 0x003C524A, 0 };
-	WorldFlag TingleFreed  = { 0x003C5237, 0 };
-	WorldFlag GreatFairies = { 0x003C525C, 0 };
 };
 
 
 // Takes a WWFlags instance by reference and reads flag values to it from Dolphin
-// includeStages will also update values on StageInfo instances
-void UpdateWWFlags(WWFlags *flags, bool includeStages = false)
+void UpdateWWFlags(WWFlags *flags)
 {
-	if (includeStages)
-	{
-		for (int i = 0; i < 15; i++)
-			flags->Stages[i].UpdateInfo();
-	}
-
-	flags->PearlsPlaced.flag = DolphinRead8(flags->PearlsPlaced.address);
-	flags->TowerRaised.flag  = DolphinRead8(flags->TowerRaised.address);
-	flags->TingleFreed.flag  = DolphinRead8(flags->TingleFreed.address);
-	flags->GreatFairies.flag = DolphinRead8(flags->GreatFairies.address);
+	for (int i = 0; i < 15; i++)
+		flags->Stages[i].UpdateInfo();
 }
 
 // ORs two sets of StageInfo and returns a third combined set

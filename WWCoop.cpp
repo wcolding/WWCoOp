@@ -127,8 +127,10 @@ int main(int argc, char *argv[])
 			if (syncing) 
 			{
 				swapInv = GetInventoryFromProcess();
-				UpdateWWFlags(&permFlags, true);
+				oldFlags = permFlags;
+				UpdateWWFlags(&permFlags);
 				localPlayer.context.UpdateInfo();
+				localPlayer.flags.ReadFlags();
 
 				if (InvChanged(localPlayer.inventory, swapInv))
 				{
@@ -249,6 +251,7 @@ int main(int argc, char *argv[])
 						localPlayer.inventory = GetInventoryFromProcess();
 						localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
 						localPlayer.context.UpdateInfo();
+						localPlayer.flags.ReadFlags();
 						UpdateWWFlags(&permFlags);
 
 						// Lazy serialization
@@ -256,6 +259,8 @@ int main(int argc, char *argv[])
 						memcpy(&sendBuffer[2], &localPlayer, sizeof(localPlayer));
 						send(client, sendBuffer, 2 + sizeof(localPlayer), 0);
 						LogVerbose("Player data sent to server");
+
+
 						break;
 					}
 					case WW_COMMAND_SET:
@@ -486,7 +491,18 @@ int main(int argc, char *argv[])
 								WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + permFlags.Stages[i].address), &rxLocalContext.currentStageInfo, sizeof(StageInfo), nullptr);
 							}
 						}
+						break;
+					}
+					case WW_COMMAND_FLAGGROUP:
+					{
+						if (bytesRead < (2 + sizeof(WorldFlagGroup)))
+							break;
+						WorldFlagGroup rxFlagGroup;
+						memcpy(&rxFlagGroup, &buffer[2], sizeof(WorldFlagGroup));
 
+						// Server has combined these groups, all we need to do is write them
+						localPlayer.flags = rxFlagGroup;
+						localPlayer.flags.WriteFlags();
 						break;
 					}
 					default:
@@ -527,9 +543,8 @@ int main(int argc, char *argv[])
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
 		
-		
-		UpdateWWFlags(&permFlags);
 		oldFlags = permFlags;
+		UpdateWWFlags(&permFlags);
 
 		localPlayer.context.UpdateInfo();
 
@@ -566,23 +581,7 @@ int main(int argc, char *argv[])
 					std::cout << "Stage: " << (int)localPlayer.context.stageID << " " << localPlayer.context.sceneName << std::endl;
 				}
 
-				UpdateWWFlags(&permFlags, true);
-
-				if (oldFlags.GreatFairies.flag != permFlags.GreatFairies.flag)
-				{
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Eastern) != 0)
-						std::cout << "Player has visited Eastern Fairy" << std::endl;
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Northern) != 0)
-						std::cout << "Player has visited Northern Fairy" << std::endl;
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Outset) != 0)
-						std::cout << "Player has visited Outset Fairy" << std::endl;
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Southern) != 0)
-						std::cout << "Player has visited Southern Fairy" << std::endl;
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Thorned) != 0)
-						std::cout << "Player has visited Thorned Fairy" << std::endl;
-					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Western) != 0)
-						std::cout << "Player has visited Western Fairy" << std::endl;
-				}
+				UpdateWWFlags(&permFlags);
 
 				oldFlags = permFlags;
 
@@ -886,6 +885,15 @@ UINT NewClientThread(LPVOID newClient)
 						ClientSetPermanentFlags(client, localPlayer.context);
 					}
 
+					// Always merge non-StageInfo flags
+					for (int i = 0; i < localPlayer.flags.worldFlags.size(); i++)
+					{
+						localPlayer.flags.worldFlags[i].flag |= remotePlayer.flags.worldFlags[i].flag;
+					}
+
+					// Write merged flags to both players
+					localPlayer.flags.WriteFlags();
+					ClientSetFlagGroup(client, localPlayer.flags);
 				}
 			}
 		}
