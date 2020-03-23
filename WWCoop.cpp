@@ -886,7 +886,7 @@ UINT NewClientThread(LPVOID newClient)
 					}
 
 					// Always merge non-StageInfo flags
-					for (int i = 0; i < localPlayer.flags.worldFlags.size(); i++)
+					for (int i = 0; i < WORLD_FLAG_COUNT; i++)
 					{
 						localPlayer.flags.worldFlags[i].flag |= remotePlayer.flags.worldFlags[i].flag;
 					}

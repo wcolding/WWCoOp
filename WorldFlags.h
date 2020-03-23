@@ -59,6 +59,8 @@ struct WorldFlag
 	__int8 flag;
 };
 
+#define WORLD_FLAG_COUNT 4
+
 // Collection of WorldFlags to be shared over the network
 struct WorldFlagGroup
 {
@@ -72,13 +74,13 @@ struct WorldFlagGroup
 
 	void ReadFlags()
 	{
-		for (int i = 0; i < worldFlags.size(); i++)
+		for (int i = 0; i < WORLD_FLAG_COUNT; i++)
 			worldFlags[i].flag = DolphinRead8(worldFlags[i].address);
 	}
 
 	void WriteFlags()
 	{
-		for (int i = 0; i < worldFlags.size(); i++)
+		for (int i = 0; i < WORLD_FLAG_COUNT; i++)
 			DolphinWrite8(worldFlags[i].address, worldFlags[i].flag);
 	}
 };
