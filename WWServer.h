@@ -17,6 +17,8 @@
 #define WW_COMMAND_UPGRADE      0x0610
 #define WW_COMMAND_GIVE_CHART   0x0611
 #define WW_COMMAND_SET	        0x0612   // WW_COMMAND_SET, address, value, length
+#define WW_COMMAND_LOCALFLAGS   0x0620
+#define WW_COMMAND_PERMFLAGS    0x0621
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_FLAG 0x090C
@@ -38,6 +40,13 @@ struct LocalContext
 	char sceneName[8];
 	PlayerTransform transform;
 	StageInfo currentStageInfo;
+
+	void UpdateInfo()
+	{
+		stageID = DolphinRead8(STAGE_ID);
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + MAP_OFFSET), &sceneName, 8, nullptr);
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &currentStageInfo, sizeof(StageInfo), nullptr);
+	}
 };
 
 struct Player
@@ -125,6 +134,24 @@ int ClientUpgrade(SOCKET client, WWUpgradeItem item)
 	SetBufferCommand(buffer, WW_COMMAND_UPGRADE);
 	buffer[2] = item;
 	return send(client, buffer, 3, 0);
+}
+
+// Sends a StageInfo instance for the client to patch onto its local flags
+int ClientSetLocalFlags(SOCKET client, StageInfo info)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_LOCALFLAGS);
+	memcpy(&buffer[2], &info, sizeof(StageInfo));
+	return send(client, buffer, 2 + sizeof(StageInfo), 0);
+}
+
+// Sends a full LocalContext instance for the client to place in the correct permanent StageInfo space
+int ClientSetPermanentFlags(SOCKET client, LocalContext ctx)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_PERMFLAGS);
+	memcpy(&buffer[2], &ctx, sizeof(LocalContext));
+	return send(client, buffer, 2 + sizeof(LocalContext), 0);
 }
 
 // Chooses whether to update a local or remote player's itemState at a specified index

@@ -9,6 +9,7 @@
 #define WW_DUNG_PROGRESS 0x21
 #define WW_DUNG_VISTED 0x18
 
+#define STAGE_ID 0x003C53A4
 #define SCENE_COUNTER 0x003CA620
 
 struct StageInfo
@@ -195,21 +196,11 @@ struct WorldGroup
 // This will effectively block the thread until we can ensure accurate local flags
 void YieldToSceneCounter()
 {
-	int sceneCounter = 0;
-	char counterBuffer[4];
-	memset(&counterBuffer, 0, 4);
+	short sceneCounter = 0;
 
 	while (sceneCounter == 0)
 	{
-		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER), &counterBuffer, sizeof(counterBuffer), nullptr);
-		for (int i = 0; i < 4; i++)
-		{
-			if (counterBuffer[i] != 0)
-			{
-				sceneCounter = 1;
-				Sleep(1000);
-			}
-		}
+		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + SCENE_COUNTER -2), &sceneCounter, 2, nullptr);
 		Sleep(1000/30); // Check once a frame (assuming 30 fps)
 	}
 }

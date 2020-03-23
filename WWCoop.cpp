@@ -16,7 +16,7 @@ bool syncing = false;
 Player localPlayer;
 
 WWInventory swapInv, patchInv;
-WWFlags localUserFlags, swapFlags;
+WWFlags permFlags, oldFlags;
 
 vector <string> clientNames;
 
@@ -107,6 +107,8 @@ int main(int argc, char *argv[])
 
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
+		localPlayer.context.UpdateInfo();
+		UpdateWWFlags(&permFlags);
 
 		//AfxBeginThread(TestModeCommandsThread, &localPlayer);
 
@@ -125,6 +127,8 @@ int main(int argc, char *argv[])
 			if (syncing) 
 			{
 				swapInv = GetInventoryFromProcess();
+				UpdateWWFlags(&permFlags, true);
+				localPlayer.context.UpdateInfo();
 
 				if (InvChanged(localPlayer.inventory, swapInv))
 				{
@@ -212,10 +216,7 @@ int main(int argc, char *argv[])
 			return -6;
 		}
 
-		
-
 		WWInventory rxPatch;
-		WWFlags rxFlags;
 
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
@@ -247,6 +248,8 @@ int main(int argc, char *argv[])
 					{
 						localPlayer.inventory = GetInventoryFromProcess();
 						localPlayer.checksumA = CalculateChecksum(localPlayer.inventory);
+						localPlayer.context.UpdateInfo();
+						UpdateWWFlags(&permFlags);
 
 						// Lazy serialization
 						SetBufferCommand(sendBuffer, WW_RESPONSE_POLL);
@@ -458,7 +461,34 @@ int main(int argc, char *argv[])
 						}
 						break;
 					}
+					case WW_COMMAND_LOCALFLAGS:
+					{
+						if (bytesRead < (2 + sizeof(StageInfo)))
+							break;
+						StageInfo rxStageInfo;
+						memcpy(&rxStageInfo, &buffer[2], sizeof(StageInfo));
 
+						localPlayer.context.currentStageInfo = MergeStageInfo(localPlayer.context.currentStageInfo, rxStageInfo);
+						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo), nullptr);
+						break;
+					}
+					case WW_COMMAND_PERMFLAGS:
+					{
+						if (bytesRead < (2 + sizeof(LocalContext)))
+							break;
+						LocalContext rxLocalContext;
+						memcpy(&rxLocalContext, &buffer[2], sizeof(LocalContext));
+
+						for (int i = 0; i < 15; i++)
+						{
+							if (permFlags.Stages[i].stageID == rxLocalContext.stageID)
+							{
+								WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + permFlags.Stages[i].address), &rxLocalContext.currentStageInfo, sizeof(StageInfo), nullptr);
+							}
+						}
+
+						break;
+					}
 					default:
 						break;
 					}
@@ -497,14 +527,16 @@ int main(int argc, char *argv[])
 		localPlayer.inventory = GetInventoryFromProcess();
 		PrintInventory(localPlayer.inventory);
 		
-		WWFlags stageFlags, oldFlags;
-		UpdateWWFlags(&stageFlags);
-		oldFlags = stageFlags;
+		
+		UpdateWWFlags(&permFlags);
+		oldFlags = permFlags;
 
-		string oldStageName = GetCurrentStage();
-		string stageName;
+		localPlayer.context.UpdateInfo();
 
-		std::cout << "Stage: " << oldStageName << std::endl;
+		string oldStageName = localPlayer.context.sceneName;
+		__int8 oldStageID = localPlayer.context.stageID;
+
+		std::cout << "Stage: " << (int)localPlayer.context.stageID << " " << localPlayer.context.sceneName << std::endl;
 
 		AfxBeginThread(TestModeCommandsThread, &localPlayer);
 
@@ -524,32 +556,35 @@ int main(int argc, char *argv[])
 					std::cout << "Checksum: " << localPlayer.checksumA << std::endl;
 				}
 
-				stageName = GetCurrentStage();
-				if (stageName != oldStageName)
+				localPlayer.context.UpdateInfo();
+
+				// Player changed sub stages
+				if (localPlayer.context.stageID != oldStageID)
 				{
-					oldStageName = stageName;
-					std::cout << "Stage: " << oldStageName << std::endl;
+					oldStageName = localPlayer.context.sceneName;
+					oldStageID = localPlayer.context.stageID;
+					std::cout << "Stage: " << (int)localPlayer.context.stageID << " " << localPlayer.context.sceneName << std::endl;
 				}
 
-				UpdateWWFlags(&stageFlags);
+				UpdateWWFlags(&permFlags, true);
 
-				if (oldFlags.GreatFairies.flag != stageFlags.GreatFairies.flag)
+				if (oldFlags.GreatFairies.flag != permFlags.GreatFairies.flag)
 				{
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Eastern) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Eastern) != 0)
 						std::cout << "Player has visited Eastern Fairy" << std::endl;
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Northern) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Northern) != 0)
 						std::cout << "Player has visited Northern Fairy" << std::endl;
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Outset) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Outset) != 0)
 						std::cout << "Player has visited Outset Fairy" << std::endl;
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Southern) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Southern) != 0)
 						std::cout << "Player has visited Southern Fairy" << std::endl;
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Thorned) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Thorned) != 0)
 						std::cout << "Player has visited Thorned Fairy" << std::endl;
-					if ((stageFlags.GreatFairies.flag & WWGreatFairyMask::Western) != 0)
+					if ((permFlags.GreatFairies.flag & WWGreatFairyMask::Western) != 0)
 						std::cout << "Player has visited Western Fairy" << std::endl;
 				}
 
-				oldFlags = stageFlags;
+				oldFlags = permFlags;
 
 				Sleep(WW_INTERVAL);
 			}
@@ -816,6 +851,39 @@ UINT NewClientThread(LPVOID newClient)
 					if (localPlayer.checksumB != remotePlayer.checksumB)
 					{
 						// World states differ
+					}
+
+					// Local Context
+					if (localPlayer.context.stageID == remotePlayer.context.stageID)
+					{
+						// Players have the same local flags loaded
+
+						// Merge local flags
+						localPlayer.context.currentStageInfo = MergeStageInfo(localPlayer.context.currentStageInfo, remotePlayer.context.currentStageInfo);
+						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo), nullptr);
+
+						// Send merged flags back to client
+						ClientSetLocalFlags(client, localPlayer.context.currentStageInfo);
+					}
+					else
+					{
+						// Players are in different parts of the world
+
+						// Merge remote player's flags with local player's
+						for (int i = 0; i < 15; i++)
+						{
+							if (permFlags.Stages[i].stageID == remotePlayer.context.stageID)
+							{
+								permFlags.Stages[i].info = MergeStageInfo(permFlags.Stages[i].info, remotePlayer.context.currentStageInfo);
+								WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + permFlags.Stages[i].address), &permFlags.Stages[i].info, sizeof(StageInfo), nullptr);
+
+								// Send merged flags back to remote player
+								ClientSetLocalFlags(client, permFlags.Stages[i].info);
+							}
+						}
+
+						// Send local context, which the client end interprets and places flags to the correct permanent stageinfo in memory
+						ClientSetPermanentFlags(client, localPlayer.context);
 					}
 
 				}
