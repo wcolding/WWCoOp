@@ -57,19 +57,19 @@ struct LocalContext
 	bool IsInDungeon()
 	{
 		if (stageID == 2) // In FF
-			true;
+			return true;
 		if (stageID == 3) // In DRC
-			true;
+			return true;
 		if (stageID == 4) // In FW
-			true;
+			return true;
 		if (stageID == 5) // In TotG
-			true;
+			return true;
 		if (stageID == 6) // In Earth
-			true;
+			return true;
 		if (stageID == 7) // In Wind
-			true;
+			return true;
 		if (stageID == 8) // In Ganon's Tower
-			true;
+			return true;
 
 		return false;
 	}
