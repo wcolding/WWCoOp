@@ -12,6 +12,8 @@
 #define STAGE_ID 0x003C53A4
 #define SCENE_COUNTER 0x003CA620
 
+#define WW_ADD_KEYS 0x003CA77C
+
 struct StageInfo
 {
 	__int8 chestFlags[4];
@@ -144,17 +146,18 @@ void UpdateWWFlags(WWFlags *flags)
 }
 
 // ORs two sets of StageInfo and returns a third combined set
-StageInfo MergeStageInfo(StageInfo a, StageInfo b)
+StageInfo MergeStageInfo(StageInfo local, StageInfo remote)
 {
 	StageInfo newInfo;
 	const size_t infoSize = sizeof(StageInfo);
 	char _a[infoSize];
 	char _b[infoSize];
-	memcpy(&_a, &a, infoSize);
-	memcpy(&_b, &b, infoSize);
+	memcpy(&_a, &local, infoSize);
+	memcpy(&_b, &remote, infoSize);
 	for (int i = 0; i < infoSize; i++)
 		_a[i] |= _b[i];
 	memcpy(&newInfo, &_a, infoSize);
+	newInfo.smallKeys = local.smallKeys; // We don't want to OR keys, so we'll set this back
 	return newInfo;
 }
 
@@ -216,6 +219,27 @@ void YieldToSceneCounter()
 		Sleep(1000/30); // Check once a frame (assuming 30 fps)
 	}
 }
+
+struct Vector2
+{
+	int x;
+	int z;
+};
+
+struct PushBlock
+{
+	DWORD address;
+	Vector2 pos;
+};
+
+struct PushBlockSets
+{
+	PushBlock DRC[2] =
+	{
+		{0x00A97DF0},	// First Block in first room
+		{0x00A984C0}	// Second Block in first room
+	};
+};
 
 // This will expand as we sync more flags
 //struct WWFlags

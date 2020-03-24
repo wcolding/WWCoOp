@@ -23,7 +23,13 @@ void DolphinWrite16(unsigned int offset, __int16 value)
 	if (DolphinHandle == NULL)
 		return;
 
-	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &value, 2, nullptr);
+	char buffer[2];
+	memcpy(&buffer, &value, 2);
+	char bufStore = buffer[0];
+	buffer[0] = buffer[1];
+	buffer[1] = bufStore;
+
+	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + offset), &buffer, 2, nullptr);
 }
 
 __int8 DolphinRead8(unsigned int offset)

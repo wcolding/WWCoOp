@@ -381,3 +381,8 @@ void GiveChart(WWChartMaskB chart)
 	SetBufferFromChartState(chartBuffer, currentChartState);
 	WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WWItemSlot::ChartSlot), &chartBuffer, sizeof(chartBuffer), nullptr);
 }
+
+void AddKeys(short numKeys)
+{
+	DolphinWrite16(WW_ADD_KEYS, numKeys);
+}

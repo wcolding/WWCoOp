@@ -20,6 +20,7 @@
 #define WW_COMMAND_LOCALFLAGS   0x0620
 #define WW_COMMAND_PERMFLAGS    0x0621
 #define WW_COMMAND_FLAGGROUP    0x0622
+#define WW_COMMAND_ADDKEYS      0x0623
 
 #define WW_RESPONSE_POLL 0x0909
 #define WW_RESPONSE_FLAG 0x090C
@@ -41,14 +42,40 @@ struct LocalContext
 	char sceneName[8];
 	PlayerTransform transform;
 	StageInfo currentStageInfo;
+	__int8 lastKeys;
 
 	void UpdateInfo()
 	{
 		stageID = DolphinRead8(STAGE_ID);
+		if (IsInDungeon())
+			lastKeys == currentStageInfo.smallKeys;
+		
 		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + MAP_OFFSET), &sceneName, 8, nullptr);
 		ReadProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &currentStageInfo, sizeof(StageInfo), nullptr);
 	}
+
+	bool IsInDungeon()
+	{
+		if (stageID == 2) // In FF
+			true;
+		if (stageID == 3) // In DRC
+			true;
+		if (stageID == 4) // In FW
+			true;
+		if (stageID == 5) // In TotG
+			true;
+		if (stageID == 6) // In Earth
+			true;
+		if (stageID == 7) // In Wind
+			true;
+		if (stageID == 8) // In Ganon's Tower
+			true;
+
+		return false;
+	}
 };
+
+
 
 struct Player
 {
@@ -163,6 +190,14 @@ int ClientSetFlagGroup(SOCKET client, WorldFlagGroup group)
 	SetBufferCommand(buffer, WW_COMMAND_FLAGGROUP);
 	memcpy(&buffer[2], &group, sizeof(WorldFlagGroup));
 	return send(client, buffer, 2 + sizeof(WorldFlagGroup), 0);
+}
+
+int ClientAddKeys(SOCKET client, short keys)
+{
+	char buffer[WWINV_BUFFER_LENGTH];
+	SetBufferCommand(buffer, WW_COMMAND_ADDKEYS);
+	memcpy(&buffer[2], &keys, 2);
+	return send(client, buffer, 4, 0);
 }
 
 // Chooses whether to update a local or remote player's itemState at a specified index

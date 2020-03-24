@@ -474,7 +474,8 @@ int main(int argc, char *argv[])
 						memcpy(&rxStageInfo, &buffer[2], sizeof(StageInfo));
 
 						localPlayer.context.currentStageInfo = MergeStageInfo(localPlayer.context.currentStageInfo, rxStageInfo);
-						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo), nullptr);
+						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo) - 2, nullptr); // not directly syncing local keys for now
+						DolphinWrite8(WW_LOCAL_FLAGS + sizeof(StageInfo) - 1, localPlayer.context.currentStageInfo.dungeonProgress);
 						break;
 					}
 					case WW_COMMAND_PERMFLAGS:
@@ -503,6 +504,15 @@ int main(int argc, char *argv[])
 						// Server has combined these groups, all we need to do is write them
 						localPlayer.flags = rxFlagGroup;
 						localPlayer.flags.WriteFlags();
+						break;
+					}
+					case WW_COMMAND_ADDKEYS:
+					{
+						if (bytesRead < 4)
+							break;
+						short keysToAdd = 0;
+						memcpy(&keysToAdd, &buffer[2], 2);
+						AddKeys(keysToAdd);
 						break;
 					}
 					default:
@@ -626,6 +636,9 @@ UINT NewClientThread(LPVOID newClient)
 	int bytesSent = 0;
 	vector<string> itemsList;
 	bool announcedPlayer = false;
+
+	__int8 oldLocalKeys, oldRemoteKeys, newLocalKeys, newRemoteKeys; 
+	short numKeys;
 
 	while (running)
 	{
@@ -858,7 +871,62 @@ UINT NewClientThread(LPVOID newClient)
 
 						// Merge local flags
 						localPlayer.context.currentStageInfo = MergeStageInfo(localPlayer.context.currentStageInfo, remotePlayer.context.currentStageInfo);
-						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo), nullptr);
+
+						// Handle keys
+						// Rather than directly sync keys, we will check them against the previous key amounts, and then set keys using AddKeys()
+						// This will ensure the correct amount of keys is favored, and that the in-game GUI will update accordingly without need to refresh a stage
+						newLocalKeys = localPlayer.context.currentStageInfo.smallKeys;
+						newRemoteKeys = remotePlayer.context.currentStageInfo.smallKeys;
+						oldLocalKeys = localPlayer.context.lastKeys;
+						oldRemoteKeys = remotePlayer.context.lastKeys;
+
+
+						if ((newLocalKeys != newRemoteKeys) && (localPlayer.context.IsInDungeon()))
+						{
+							if ((newLocalKeys != oldLocalKeys) && (newRemoteKeys != oldRemoteKeys))
+							{
+								// Both players are reporting a change in keys
+								// This is unlikely, so we assume it is an error and sync the higher amount of keys
+								// If we're not sure, we're gonna err on the side of giving the players an extra key
+								
+								if (newLocalKeys > newRemoteKeys)
+								{
+									// Local keys is higher, trust the server
+									numKeys = newLocalKeys - newRemoteKeys;
+									ClientAddKeys(client, numKeys);
+								}
+
+								if (newRemoteKeys > newLocalKeys)
+								{
+									// Remote keys is higher, trust the client
+									numKeys = newRemoteKeys - newLocalKeys;
+									AddKeys(numKeys);
+								}
+
+								goto OTHER_FLAGS;
+							}
+
+							if (newLocalKeys != oldLocalKeys)
+							{
+								// Only the local player has changed keys
+								numKeys = newLocalKeys - oldLocalKeys;
+								ClientAddKeys(client, numKeys);
+
+								goto OTHER_FLAGS;
+							}
+
+							if (newRemoteKeys != oldRemoteKeys)
+							{
+								// Only the remote player has changed keys
+								numKeys = newRemoteKeys - oldRemoteKeys;
+								AddKeys(numKeys);
+							}
+						}
+
+OTHER_FLAGS:
+						// Write the rest of the flags
+						WriteProcessMemory(DolphinHandle, (LPVOID)(BASE_OFFSET + WW_LOCAL_FLAGS), &localPlayer.context.currentStageInfo, sizeof(StageInfo) - 2, nullptr);
+						DolphinWrite8(WW_LOCAL_FLAGS + sizeof(StageInfo) - 1, localPlayer.context.currentStageInfo.dungeonProgress);
 
 						// Send merged flags back to client
 						ClientSetLocalFlags(client, localPlayer.context.currentStageInfo);
@@ -954,7 +1022,7 @@ UINT TestModeCommandsThread(LPVOID p)
 			if (!walletKey)
 			{
 				walletKey = true;
-				GiveNewBottle();
+				AddKeys(1);
 			}
 		}
 		else
@@ -967,7 +1035,7 @@ UINT TestModeCommandsThread(LPVOID p)
 			if (!magicKey)
 			{
 				magicKey = true;
-				UpgradeMagic();
+				AddKeys(-1);
 			}
 		}
 		else
