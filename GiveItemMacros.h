@@ -148,6 +148,12 @@ void GiveSkullHammer()
 	DolphinWrite8(INV_OFFSET + 20, WWItem::Hammer);
 }
 
+void GiveBracelet()
+{
+	DolphinWrite8(WWItemSlot::BraceletSlot, WWItem::Bracelet);
+	DolphinWrite8(WWItemSlot::BraceletIconSlot, 1);
+}
+
 void SetSword(int swordLvl)
 {
 	switch (swordLvl)

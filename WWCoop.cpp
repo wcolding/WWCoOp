@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
 							GiveMagicArmor();
 							break;
 						case WWItem::BaitBag:
-							GiveHookshot();
+							GiveBaitBag();
 							break;
 						case WWItem::Bow1:
 							SetBow(1);
@@ -383,6 +383,10 @@ int main(int argc, char *argv[])
 							break;
 						case WWItem::Shield2:
 							SetShield(2);
+							break;
+
+						case WWItem::Bracelet:
+							GiveBracelet();
 							break;
 
 						case WWItem::FathersLetter:
