@@ -1,3 +1,6 @@
+# THIS REPOSITORY IS NO LONGER ACTIVE #
+The code base is being rewritten as a fork of Dolphin with a C# client attached. You can view the new client [here.](https://github.com/wcolding/TWW-Coop)
+
 # Wind Waker Co-op
 
 This program is intended to sync Wind Waker inventories between multiple players. It does this by hooking a running Dolphin emulator process.
